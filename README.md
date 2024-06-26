@@ -1,2 +1,4 @@
 # cwtch
-net based javascript chess engine
+Net based javascript chess engine.
+Not released. In development.
+
