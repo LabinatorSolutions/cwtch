@@ -1,3 +1,6 @@
+//
+// Write tidy epds to stdout.
+//
 
 fs = require('fs');
 

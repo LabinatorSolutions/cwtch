@@ -79,44 +79,31 @@ function tryScale (scale) {
 
   err = err / epds.length;
 
-  process.stdout.write(scale+' '+err+'\r');
+  console.log(scale,err);
+
   return err;
 }
 
 //}}}
 //{{{  findScale
 
-function findScale () {
+function findScale (minScale, maxScale) {
 
-    console.log('finding scale...');
+  while (minScale < maxScale) {
 
-    var start =  0;
-    var finish = 500;
-    var step = 100;
-    var err = 0;
-    var best = 99999;
-    var scale = 0;
+    var mid1 = Math.floor(minScale + (maxScale - minScale) / 3);
+    var mid2 = Math.floor(maxScale - (maxScale - minScale) / 3);
 
-    for (var i = 0; i < 3; i++) {
+    var loss1 = tryScale(mid1);
+    var loss2 = tryScale(mid2);
 
-      scale = start - step;
-      while (scale < finish) {
-        scale += step;
-        err = tryScale(scale);
-        if (err <= best) {
-          best = err,
-          start = scale;
-        }
-      }
+    if (loss1 < loss2)
+      maxScale = mid2 - 1;
+    else
+      minScale = mid1 + 1;
+  }
 
-      console.log(start, best);
-
-      finish = start + step;
-      start = start - step;
-      step  = step  / 10.0;
-    }
-
-    return best;
+  return minScale;
 }
 
 //}}}
@@ -164,8 +151,33 @@ for (var j=0; j < gFiles.length; j++) {
 
 //}}}
 
-var scale = findScale();
-console.log('tuned scale', scale);
+var best = findScale(0, 500);
+console.log(best);
+
+//{{{  quantise info
+
+var minw = 9999999;
+var maxw = -9999999;
+
+for (var i =0; i < ISIZE; i++) {
+  const h = NET_H1_W[i];
+  for (var j=0; j < H1SIZE; j++) {
+    h[j] = Math.round(h[j] * 1000) | 0 ;
+  }
+}
+
+for (var i =0; i < ISIZE; i++) {
+  const h = NET_H1_W[i];
+  for (var j=0; j < H1SIZE; j++) {
+    const w = h[j];
+    minw = Math.min(minw,w);
+    maxw = Math.max(maxw,w);
+  }
+}
+
+console.log(minw,maxw,maxw-minw);
+
+//}}}
 
 process.exit();
 

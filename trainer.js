@@ -3,16 +3,21 @@ const fs       = require('fs');
 const readline = require('readline');
 const tf       = require('@tensorflow/tfjs-node');
 
+/*{{{  config*/
+
 const dataFile     = 'data/tidy.epd';
 const weightsFile  = 'data/weights.js';
 const modelFile    = 'file://./data/model';
 const restoreModel = false;
 const batchSize    = 100;
 const inputSize    = 768;
-const hiddenSize   = 16;
-const numEpochs    = 100;
+const hiddenSize   = 8;
+const numEpochs    = 1000;
 const reportRate   = 100;
 
+/*}}}*/
+
+console.log('hidden size', hiddenSize);
 console.log('batch size', batchSize);
 console.log('epochs', numEpochs);
 
@@ -129,6 +134,7 @@ async function trainEpoch(model, epoch) {
   let x     = 0;
   let y     = 0;
   let r     = 0;
+  let mse   = 0;
 
   const inputs  = Array(batchSize);
   const targets = Array(batchSize);
@@ -143,6 +149,7 @@ async function trainEpoch(model, epoch) {
     input: fileStream,
     crlfDelay: Infinity
   });
+
 
   for await (const line of rl) {
 
@@ -171,35 +178,42 @@ async function trainEpoch(model, epoch) {
     n++;
 
     if (n == batchSize) {
-
+      /*{{{  train batch*/
+      
       if (inputs.length != batchSize)
         error('inputs',inputs.length);
-
+      
       if (targets.length != batchSize)
         error('targets',targets.length);
-
+      
       shuffle(inputs, targets);
-
+      
       x = tf.tensor(inputs);
       y = tf.tensor(targets);
-
+      
       r = await model.trainOnBatch(x,y);
-
+      
       x.dispose();
       y.dispose();
-
-      err += r[0];
+      
       batch++;
+      
+      err += r[0];
+      mse = err / batch;
+      
       if ((batch % reportRate) == 0)
-        process.stdout.write(epoch + ', ' + batch + ', ' + err/batch + '                \r');
+        process.stdout.write(epoch + ', ' + batch + ', ' + mse + '                \r');
+      
       n = 0;
+      
+      /*}}}*/
     }
   }
 
-  console.log(epoch,err/batch,'                     ');
-
   rl.close();
   fileStream.close();
+
+  return mse;
 }
 
 /*}}}*/
@@ -208,14 +222,15 @@ async function trainEpoch(model, epoch) {
 async function train () {
 
   var model = 0;
+  var mse   = 0;
 
   if (restoreModel) {
     model = await tf.loadLayersModel(modelFile + '/model.json');
   }
   else {
     model = tf.sequential();
-    model.add(tf.layers.dense({units: hiddenSize, inputShape: [inputSize], name: 'hidden'+hiddenSize, activation: 'relu'}));
-    model.add(tf.layers.dense({units: 1,                                   name: 'output',            activation: 'sigmoid'}));
+    model.add(tf.layers.dense({units: hiddenSize, inputShape: [inputSize],  name: 'hidden1', activation: 'relu'}));
+    model.add(tf.layers.dense({units: 1,                                    name: 'output',  activation: 'sigmoid'}));
     model.compile({
       optimizer: 'adam',
       loss:      'meanSquaredError',
@@ -223,14 +238,16 @@ async function train () {
     });
   }
 
-  await saveWeights(model, 0);
+  await saveWeights(model, 0, mse);
   await model.save(modelFile);
 
   for (let epoch=0; epoch < numEpochs; epoch++) {
 
-    await trainEpoch(model, epoch+1);
+    mse = await trainEpoch(model, epoch+1);
 
-    await saveWeights(model, epoch+1);
+    console.log(epoch+1, mse, '          ');
+
+    await saveWeights(model, epoch+1, mse);
     await model.save(modelFile);
   }
 }
@@ -238,7 +255,7 @@ async function train () {
 /*}}}*/
 /*{{{  saveWeights*/
 
-async function saveWeights(model, epochs) {
+async function saveWeights(model, epochs, mse) {
 
   const d = new Date();
 
@@ -262,10 +279,10 @@ async function saveWeights(model, epochs) {
     }
   }
 
-  var o = '{{{  weights\r\n\r\n// epochs ' + epochs + ' batchsize ' + batchSize + ' ' + d + '\r\n\r\n';
+  var o = '{{{  weights\r\n\r\n// epochs ' + epochs + ' hiddensize ' + hiddenSize + ' batchsize ' + batchSize + ' mse ' + mse + ' ' + d + '\r\n\r\n';
 
-  var iweights = w['hidden16'][0];
-  var ibiases  = w['hidden16'][1];
+  var iweights = w['hidden1'][0];
+  var ibiases  = w['hidden1'][1];
 
   for (var i=0; i < inputSize; i++) {
     const w1 = iweights[i];
