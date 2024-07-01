@@ -2,9 +2,10 @@
 // Write tidy epds to stdout.
 //
 
-fs = require('fs');
+const fs       = require('fs');
+const readline = require('readline');
 
-{{{  getprob
+/*{{{  getprob*/
 
 function getprob (r) {
   if (r == '1/2-1/2')
@@ -25,39 +26,57 @@ function getprob (r) {
     return 1.0;
   else if (r == '[0.0]')
     return 0.0;
+  else if (r == '0.5')
+    return 0.5;
+  else if (r == '1.0')
+    return 1.0;
+  else if (r == '0.0')
+    return 0.0;
   else {
     console.log('unknown result',r);
     process.exit();
   }
 }
 
-}}}
+/*}}}*/
 
-const epdFile = 'data/lichess-big3-resolved.epd';
-const wdl     = 6;
+const epdFile = '';
+const wdl     = 0;
+const bi      = 0;
 
-var data  = fs.readFileSync(epdFile, 'utf8');
-var lines = data.split('\n');
+const rl = readline.createInterface({
+    input: fs.createReadStream(epdFile),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
 
-data = '';
-
-for (var i=0; i < lines.length; i++) {
-
-  var line = lines[i];
-
+rl.on('line', function (line) {
+  /*{{{  process line*/
+  
   line = line.replace(/(\r\n|\n|\r|"|;)/gm,'');
+  line = line.replace(/,/gm,' ');
   line = line.trim();
-
+  
+  //console.log(line);
+  
   if (!line.length)
-    continue;
-
+    return;
+  
   var parts = line.split(' ');
-
+  
   if (!parts.length)
-    continue;
+    return;
+  
+  if (parts[0] == 'Hash')
+    return;
+  
+  console.log(parts[bi],getprob(parts[wdl]));
+  
+  /*}}}*/
+});
 
-  console.log(parts[0],getprob(parts[wdl]));
-}
-
-process.exit();
+rl.on('close', function(){
+  process.exit();
+});
 

@@ -5,15 +5,16 @@ const tf       = require('@tensorflow/tfjs-node');
 
 /*{{{  config*/
 
-const dataFile     = 'data/tidy.epd';
-const weightsFile  = 'data/weights.js';
-const modelFile    = 'file://./data/model';
-const restoreModel = false;
-const batchSize    = 100;
-const inputSize    = 768;
-const hiddenSize   = 8;
-const numEpochs    = 1000;
-const reportRate   = 100;
+const dataFile       = 'data/tidy.epd';
+const weightsFile    = 'data/weights.js';
+const binWeightsFile = 'data/weights.bin';
+const modelFile      = 'file://./data/model';
+const restoreModel   = false;
+const batchSize      = 100;
+const inputSize      = 768;
+const hiddenSize     = 128;
+const numEpochs      = 1000;
+const reportRate     = 100;
 
 /*}}}*/
 
@@ -238,7 +239,11 @@ async function train () {
     });
   }
 
+  //console.log(model);
+  //process.exit();
+
   await saveWeights(model, 0, mse);
+  await saveBinWeights(model);
   await model.save(modelFile);
 
   for (let epoch=0; epoch < numEpochs; epoch++) {
@@ -248,6 +253,7 @@ async function train () {
     console.log(epoch+1, mse, '          ');
 
     await saveWeights(model, epoch+1, mse);
+    await saveBinWeights(model);
     await model.save(modelFile);
   }
 }
@@ -279,7 +285,7 @@ async function saveWeights(model, epochs, mse) {
     }
   }
 
-  var o = '{{{  weights\r\n\r\n// epochs ' + epochs + ' hiddensize ' + hiddenSize + ' batchsize ' + batchSize + ' mse ' + mse + ' ' + d + '\r\n\r\n';
+  var o = '{{{  weights\r\n\r\n// epochs ' + epochs + ', hiddensize ' + hiddenSize + ', batchsize ' + batchSize + ', mse ' + mse + ', ' + d + '\r\n\r\n';
 
   var iweights = w['hidden1'][0];
   var ibiases  = w['hidden1'][1];
@@ -304,6 +310,74 @@ async function saveWeights(model, epochs, mse) {
   o += '}}}\r\n\r\n';
 
   fs.writeFileSync(weightsFile, o);
+}
+
+/*}}}*/
+/*{{{  saveBinWeights*/
+
+async function saveBinWeights(model) {
+
+  /*{{{  get the weights from the model*/
+  
+  const weights = {};
+  const layers = model.layers;
+  
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
+    weights[layer.name] = layer.getWeights();
+  }
+  
+  const w = {};
+  const layerNames = Object.keys(weights);
+  
+  for (let i = 0; i < layerNames.length; i++) {
+    const layerName = layerNames[i];
+    w[layerName] = [];
+    const tensors = weights[layerName];
+    for (let j = 0; j < tensors.length; j++) {
+      w[layerName].push(tensors[j].arraySync());
+    }
+  }
+  
+  /*}}}*/
+
+  const totalBytes = 4 + 768 * hiddenSize * 4 + hiddenSize * 4 + hiddenSize * 4 + 4;
+  const buffer     = new ArrayBuffer(totalBytes);
+  //const view       = new DataView(buffer);
+
+  var start = 0;
+
+  const hSize    = new Uint32Array(buffer, start, 1);                 start += 4;
+  const hWeights = new Float32Array(buffer, start, 768 * hiddenSize); start += 768 * hiddenSize * 4;
+  const hBiases  = new Float32Array(buffer, start, hiddenSize);       start += hiddenSize * 4;
+  const oWeights = new Float32Array(buffer, start, hiddenSize);       start += hiddenSize * 4;
+  const oBias    = new Float32Array(buffer, start, 1);
+
+  hSize[0] = hiddenSize;
+
+  var a = w['hidden1'][0];
+  for (var i=0; i < inputSize; i++) {
+    for (var j=0; j < hiddenSize; j++) {
+      hWeights[i*hiddenSize+j] = a[i][j];
+    }
+  }
+
+  var a = w['hidden1'][1];
+  for (var j=0; j < hiddenSize; j++) {
+    hBiases[j] = a[j];
+  }
+
+  var a = w['output'][0];
+  for (var j=0; j < hiddenSize; j++) {
+    oWeights[j] = a[j];
+  }
+
+  var a = w['output'][1];
+  oBias[0] = a[0];
+
+  const nodeBuffer = Buffer.from(buffer);
+
+  fs.writeFileSync(binWeightsFile, nodeBuffer);
 }
 
 /*}}}*/
