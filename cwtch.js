@@ -1361,6 +1361,9 @@
   //}}}
   
   //{{{  go
+  //
+  // https://github.com/AndyGrant/Ethereal/blob/master/src/search.c#L274
+  //
   
   cwtchStruct.prototype.go = function () {
   
