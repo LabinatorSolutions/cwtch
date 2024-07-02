@@ -151,33 +151,10 @@ for (var j=0; j < gFiles.length; j++) {
 
 //}}}
 
+console.log('h1 =',net_h1_size);
+
 var best = findScale(0, 500);
 console.log(best);
-
-//{{{  quantise info
-
-var minw = 9999999;
-var maxw = -9999999;
-
-for (var i =0; i < ISIZE; i++) {
-  const h = NET_H1_W[i];
-  for (var j=0; j < H1SIZE; j++) {
-    h[j] = Math.round(h[j] * 1000) | 0 ;
-  }
-}
-
-for (var i =0; i < ISIZE; i++) {
-  const h = NET_H1_W[i];
-  for (var j=0; j < H1SIZE; j++) {
-    const w = h[j];
-    minw = Math.min(minw,w);
-    maxw = Math.max(maxw,w);
-  }
-}
-
-console.log(minw,maxw,maxw-minw);
-
-//}}}
 
 process.exit();
 

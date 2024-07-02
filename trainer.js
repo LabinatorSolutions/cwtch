@@ -265,17 +265,19 @@ async function saveWeights(model, epochs, mse) {
 
   const d = new Date();
 
+  /*{{{  get weights*/
+  
   const weights = {};
   const layers = model.layers;
-
+  
   for (let i = 0; i < layers.length; i++) {
     const layer = layers[i];
     weights[layer.name] = layer.getWeights();
   }
-
+  
   const w = {};
   const layerNames = Object.keys(weights);
-
+  
   for (let i = 0; i < layerNames.length; i++) {
     const layerName = layerNames[i];
     w[layerName] = [];
@@ -284,29 +286,56 @@ async function saveWeights(model, epochs, mse) {
       w[layerName].push(tensors[j].arraySync());
     }
   }
+  
+  /*}}}*/
 
-  var o = '{{{  weights\r\n\r\n// epochs ' + epochs + ', hiddensize ' + hiddenSize + ', batchsize ' + batchSize + ', mse ' + mse + ', ' + d + '\r\n\r\n';
+  var o = '{{{  weights\r\n\r\n// epochs ' + epochs + ', h1 size ' + hiddenSize + ', batch size ' + batchSize + ', mse ' + mse + ', ' + d + '\r\n\r\n';
 
-  var iweights = w['hidden1'][0];
-  var ibiases  = w['hidden1'][1];
+  o += '\r\n';
 
+  /*{{{  write hidden size*/
+  
+  o += 'const net_h1_size = ' + hiddenSize + ';\r\n';
+  
+  /*}}}*/
+  /*{{{  write h1 weights*/
+  
+  var a = w['hidden1'][0];
+  
   for (var i=0; i < inputSize; i++) {
-    const w1 = iweights[i];
-    o += 'NET_H1_W[' + i + '] = [' + w1.toString() + '];\r\n';
+    const a2 = a[i];
+    o += 'net_h1_w[' + i + '] = [' + a2.toString() + '];\r\n';
   }
-  o += 'const NET_H1_B = [' + ibiases.toString() + '];\r\n';
-
-  var iweights = w['output'][0];
-  var ibiases  = w['output'][1];
-
-  var iweights2 = Array(hiddenSize);
+  
+  /*}}}*/
+  /*{{{  write h1 biases*/
+  
+  var a  = w['hidden1'][1];
+  
+  o += 'const net_h1_b = [' + a.toString() + '];\r\n';
+  
+  /*}}}*/
+  /*{{{  write o weights*/
+  
+  var a  = w['output'][0];
+  var a2 = Array(hiddenSize);
+  
   for (var i=0; i < hiddenSize; i++) {
-    iweights2[i] = iweights[i][0];
+    a2[i] = a[i][0];
   }
+  
+  o += 'const net_o_w = [' + a2.toString() + '];\r\n';
+  
+  /*}}}*/
+  /*{{{  write o bias*/
+  
+  var a = w['output'][1];
+  
+  o += 'const net_o_b = ' + a[0].toString() + ';\r\n';
+  
+  /*}}}*/
 
-  o += 'const NET_O_W = [' + iweights2.toString() + '];\r\n';
-  o += 'const NET_O_B = ' + ibiases[0].toString() + ';\r\n';
-
+  o += '\r\n';
   o += '}}}\r\n\r\n';
 
   fs.writeFileSync(weightsFile, o);
