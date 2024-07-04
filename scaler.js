@@ -56,7 +56,7 @@ function sigmoid (x) {
 
 function tryScale (scale) {
 
-  SCALE = scale;
+  net_scale = scale;
 
   var err = 0;
 
@@ -152,6 +152,7 @@ for (var j=0; j < gFiles.length; j++) {
 //}}}
 
 console.log('h1 =',net_h1_size);
+console.log('scale =',net_scale);
 
 var best = findScale(0, 500);
 console.log(best);

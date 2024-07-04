@@ -3,25 +3,92 @@ const fs       = require('fs');
 const readline = require('readline');
 const tf       = require('@tensorflow/tfjs-node');
 
-/*{{{  config*/
+let restoreModel = false;
 
-const dataFile       = 'data/tidy.epd';
+const hiddenSize = 32;
+const batchSize  = 100;
+const scale      = 150;
+const numEpochs  = 100;
+
+/*{{{  more config*/
+
+const dataFile       = 'data/no4b/data.epd';
+const fileLines      = 539648731;
+const wdlPart        = 6;
+const boardPart      = 0;
+const numParts       = 8;
+
 const weightsFile    = 'data/weights.js';
 const binWeightsFile = 'data/weights.bin';
 const modelFile      = 'file://./data/model';
-const restoreModel   = false;
-const batchSize      = 100;
+
 const inputSize      = 768;
-const hiddenSize     = 128;
-const numEpochs      = 1000;
 const reportRate     = 100;
 
 /*}}}*/
 
+console.log('data', dataFile);
 console.log('hidden size', hiddenSize);
 console.log('batch size', batchSize);
+console.log('num batchs', fileLines / batchSize | 0);
 console.log('epochs', numEpochs);
 
+if (process.argv[2] == 'r') {
+  restoreModel = true;
+  console.log('loading',modelFile);
+}
+
+/*{{{  getProb*/
+
+function getProb (r) {
+
+  if (r == '1/2-1/2')
+    return 0.5;
+  else if (r == '1-0')
+    return 1.0;
+  else if (r == '0-1')
+    return 0.0;
+
+  else if (r == '"1/2-1/2"')
+    return 0.5;
+  else if (r == '"1-0"')
+    return 1.0;
+  else if (r == '"0-1"')
+    return 0.0;
+
+  else if (r == '[0.5]')
+    return 0.5;
+  else if (r == '[1.0]')
+    return 1.0;
+  else if (r == '[0.0]')
+    return 0.0;
+
+  else if (r == '0.5')
+    return 0.5;
+  else if (r == '1.0')
+    return 1.0;
+  else if (r == '0.0')
+    return 0.0;
+
+  else {
+    console.log('unknown result',r);
+    process.exit();
+  }
+}
+
+/*}}}*/
+/*{{{  printModel*/
+
+function printModel(model) {
+
+  model.summary();
+
+  console.log(model.optimizer.constructor.name);
+  console.log(JSON.stringify(model.optimizer.getConfig(), null, 2));
+  console.log(model.loss);
+}
+
+/*}}}*/
 /*{{{  error*/
 
 function error (x,y) {
@@ -151,32 +218,31 @@ async function trainEpoch(model, epoch) {
     crlfDelay: Infinity
   });
 
-
   for await (const line of rl) {
 
     /*{{{  build batch*/
     
     const parts = line.split(' ');
     
-    targets[n][0] = parseFloat(parts[1]);
+    if (parts.length == numParts) {
     
-    decodeFEN(parts[0]);
+      targets[n][0] = getProb(parts[wdlPart]);
     
-    for (var i=0; i < inputSize; i++) {
-      inputs[n][i] = iLayer[i];
-      if (iLayer[i] != 0 && iLayer[i] != 1)
-        error('decode',line);
+      decodeFEN(parts[boardPart]);
+    
+      for (var i=0; i < inputSize; i++) {
+        inputs[n][i] = iLayer[i];
+        if (iLayer[i] != 0 && iLayer[i] != 1)
+          error('decode',line);
+      }
+    
+      if (targets[n][0] != 0 && targets[n][0] != 1 && targets[n][0] != 0.5)
+        error('prob',targets[n][0]);
+    
+      n++;
     }
     
-    if (parts.length != 2)
-      error('line format', line);
-    
-    if (targets[n][0] != 0 && targets[n][0] != 1 && targets[n][0] != 0.5)
-      error('prob',targets[n][0]);
-    
     /*}}}*/
-
-    n++;
 
     if (n == batchSize) {
       /*{{{  train batch*/
@@ -191,6 +257,8 @@ async function trainEpoch(model, epoch) {
       
       x = tf.tensor(inputs);
       y = tf.tensor(targets);
+      
+      await tf.ready();
       
       r = await model.trainOnBatch(x,y);
       
@@ -225,26 +293,38 @@ async function train () {
   var model = 0;
   var mse   = 0;
 
+  await tf.ready();
+
   if (restoreModel) {
     model = await tf.loadLayersModel(modelFile + '/model.json');
+    if (model.layers[0].units != hiddenSize) {
+      console.log("loaded model and hiddenSize don't match",model.layers[0].units,hiddenSize);
+      process.exit();
+    }
   }
   else {
     model = tf.sequential();
     model.add(tf.layers.dense({units: hiddenSize, inputShape: [inputSize],  name: 'hidden1', activation: 'relu'}));
     model.add(tf.layers.dense({units: 1,                                    name: 'output',  activation: 'sigmoid'}));
-    model.compile({
-      optimizer: 'adam',
-      loss:      'meanSquaredError',
-      metrics:   ['mse'],
-    });
   }
 
-  //console.log(model);
-  //process.exit();
+  await tf.ready();
 
-  await saveWeights(model, 0, mse);
-  await saveBinWeights(model);
-  await model.save(modelFile);
+  model.compile({
+    optimizer: tf.train.adam(),
+    loss:      'meanSquaredError',
+    metrics:   ['mse'],
+  });
+
+  await tf.ready();
+
+  printModel(model);
+
+  if (!restoreModel) {
+    await saveWeights(model, 0, mse);
+    await saveBinWeights(model);
+    await model.save(modelFile);
+  }
 
   for (let epoch=0; epoch < numEpochs; epoch++) {
 
@@ -289,16 +369,21 @@ async function saveWeights(model, epochs, mse) {
   
   /*}}}*/
 
-  var o = '{{{  weights\r\n\r\n// epochs ' + epochs + ', h1 size ' + hiddenSize + ', batch size ' + batchSize + ', mse ' + mse + ', ' + d + '\r\n\r\n';
+  var o = '//{{{  weights\r\n\r\n// epochs ' + epochs + ', h1 size ' + hiddenSize + ', batch size ' + batchSize + ', mse ' + mse + ', ' + d + '\r\n\r\n';
 
-  o += '\r\n';
-
+  /*{{{  write scale*/
+  
+  o += 'let net_scale = ' + scale + ';\r\n';
+  
+  /*}}}*/
   /*{{{  write hidden size*/
   
   o += 'const net_h1_size = ' + hiddenSize + ';\r\n';
   
   /*}}}*/
   /*{{{  write h1 weights*/
+  
+  o += 'const net_h1_w = Array(768);\r\n';
   
   var a = w['hidden1'][0];
   
@@ -335,8 +420,15 @@ async function saveWeights(model, epochs, mse) {
   
   /*}}}*/
 
-  o += '\r\n';
-  o += '}}}\r\n\r\n';
+  o += '\r\n//}}}\r\n\r\n';
+
+  //o += 'module.exports = {\r\n';
+  //o += '  net_h1_size,\r\n'
+  //o += '  net_h1_w,\r\n'
+  //o += '  net_h1_b,\r\n'
+  //o += '  net_o_w,\r\n'
+  //o += '  net_o_b\r\n'
+  //o += '};\r\n\r\n'
 
   fs.writeFileSync(weightsFile, o);
 }
