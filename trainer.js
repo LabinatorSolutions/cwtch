@@ -6,13 +6,13 @@ const tf       = require('@tensorflow/tfjs-node');
 let restoreModel = false;
 
 const hiddenSize = 32;
-const batchSize  = 100;
+const batchSize  = 10000;
 const scale      = 150;
 const numEpochs  = 100;
 
 /*{{{  more config*/
 
-const dataFile       = 'data/no4b/data.epd';
+const dataFile       = 'data/no4b/shuffled_data.epd';
 const fileLines      = 539648731;
 const wdlPart        = 6;
 const boardPart      = 0;
@@ -23,7 +23,7 @@ const binWeightsFile = 'data/weights.bin';
 const modelFile      = 'file://./data/model';
 
 const inputSize      = 768;
-const reportRate     = 100;
+const reportRate     = 5;
 
 /*}}}*/
 
