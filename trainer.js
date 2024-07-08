@@ -5,9 +5,9 @@ const tf       = require('@tensorflow/tfjs-node');
 
 let restoreModel = false;
 
-const hiddenSize = 32;
+const hiddenSize = 128;
 const batchSize  = 10000;
-const scale      = 150;
+const scale      = 200;
 const numEpochs  = 100;
 
 /*{{{  more config*/
@@ -22,6 +22,8 @@ const weightsFile    = 'data/weights.js';
 const binWeightsFile = 'data/weights.bin';
 const modelFile      = 'file://./data/model';
 
+const numBatches     = fileLines / batchSize | 0;
+
 const inputSize      = 768;
 const reportRate     = 5;
 
@@ -30,7 +32,7 @@ const reportRate     = 5;
 console.log('data', dataFile);
 console.log('hidden size', hiddenSize);
 console.log('batch size', batchSize);
-console.log('num batchs', fileLines / batchSize | 0);
+console.log('num batchs', numBatches);
 console.log('epochs', numEpochs);
 
 if (process.argv[2] == 'r') {
@@ -369,16 +371,19 @@ async function saveWeights(model, epochs, mse) {
   
   /*}}}*/
 
-  var o = '//{{{  weights\r\n\r\n// epochs ' + epochs + ', h1 size ' + hiddenSize + ', batch size ' + batchSize + ', mse ' + mse + ', ' + d + '\r\n\r\n';
+  var o = '//{{{  weights\r\n\r\n';
 
-  /*{{{  write scale*/
+  /*{{{  write scale etc*/
   
-  o += 'let net_scale = ' + scale + ';\r\n';
-  
-  /*}}}*/
-  /*{{{  write hidden size*/
-  
-  o += 'const net_h1_size = ' + hiddenSize + ';\r\n';
+  o += 'const net_date       = "' + d         + '";\r\n';
+  o += 'const net_dataFile   = ' + dataFile   + ';\r\n';
+  o += 'const net_positions  = ' + fileLines  + ';\r\n';
+  o += 'const net_h1_size    = ' + hiddenSize + ';\r\n';
+  o += 'let   net_scale      = ' + scale      + ';\r\n';
+  o += 'const net_epochs     = ' + epochs     + ';\r\n';
+  o += 'const net_batchSize  = ' + batchSize  + ';\r\n';
+  o += 'const net_numBatches = ' + numBatches + ';\r\n';
+  o += 'const net_loss       = ' + mse        + ';\r\n';
   
   /*}}}*/
   /*{{{  write h1 weights*/
