@@ -1,5 +1,9 @@
 # Cwtch
-A UCI Javascript chess engine with a network based eval.
+
+NNUE Javascript chess engine.
+DIY Javascript tuner.
+DIY data generation.
+
 Not released. In development. 
 
 
