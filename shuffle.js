@@ -4,9 +4,9 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const epdFile     = 'data/no4b/data.epd';
-const shuffleFile = 'data/no4b/shuffled_data.epd';
-const chunkSize   = 5000000;
+const epdFile     = 'data/tidy';
+const shuffleFile = 'data/shuffled_tidy.epd';
+const chunkSize   = 4000000;
 
 function shuffleChunk(a1) {
   for (let i = a1.length - 1; i > 0; i--) {

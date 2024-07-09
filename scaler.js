@@ -151,8 +151,9 @@ for (var j=0; j < gFiles.length; j++) {
 
 //}}}
 
-console.log('h1 =',net_h1_size);
-console.log('scale =',net_scale);
+console.log('scale =', net_scale);
+console.log('h1 =', net_h1_size);
+console.log('epochs =', epochs);
 
 var best = findScale(0, 500);
 console.log(best);

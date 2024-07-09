@@ -40,8 +40,8 @@ function getprob (r) {
 
 /*}}}*/
 
-const epdFile = '';
-const wdl     = 0;
+const epdFile = 'data/lichess-big3-resolved.epd';
+const wdl     = 6;
 const bi      = 0;
 
 const rl = readline.createInterface({
@@ -66,9 +66,6 @@ rl.on('line', function (line) {
   var parts = line.split(' ');
   
   if (!parts.length)
-    return;
-  
-  if (parts[0] == 'Hash')
     return;
   
   console.log(parts[bi],getprob(parts[wdl]));
