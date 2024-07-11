@@ -1,8 +1,6 @@
 # Cwtch
 
-NNUE Javascript chess engine.
-DIY Javascript tuner.
-DIY data generation.
+Experimental NNUE Javascript chess engine.
 
 Not released. In development. 
 
