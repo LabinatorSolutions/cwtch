@@ -9,17 +9,17 @@ const readline = require('readline');
 const dataFile = 'data/tidy.epd';
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
-const hiddenSize = 100;
+const hiddenSize = 20;
 const outputSize = 1;
 const batchSize = 1000;
-const epochs = 100;
+const epochs = 10000;
 const learningRate = 0.001;
-const K = 1;
+const K = 100;
 const maxActiveInputs = 32;
 const beta1 = 0.9;
 const beta2 = 0.999;
 const epsilon = 1e-7;
-const useCReLU = true;
+const useCReLU = false;
 
 //{{{  activations
 
@@ -44,7 +44,7 @@ function activationDerivative(x) {
 }
 
 function sigmoid(x) {
-  return 1 / (1 + Math.exp(-x * K));
+  return 1 / (1 + Math.exp(-x / K));
 }
 
 //}}}
@@ -75,11 +75,17 @@ function initializeParameters() {
 //{{{  saveModel
 
 function saveModel(params, epochs) {
+
+  let acti = 'relu');
+  if (useCReLU)
+    acti = 'crelu');
+
   var o = '//{{{  weights\r\n';
 
-  o += 'let   net_scale   = ' + 1          + ';\r\n';
-  o += 'const net_h1_size = ' + hiddenSize + ';\r\n';
-  o += 'const net_epochs  = ' + epochs     + ';\r\n';
+  o += 'const net_h1_size    = '  + hiddenSize + ';\r\n';
+  o += 'const net_activation = "' + acti       + '";\r\n';
+  o += 'const net_stretch    = '  + K          + ';\r\n';
+  o += 'const net_epochs     = '  + epochs     + ';\r\n';
 
   o += '//{{{  weights\r\n';
 
@@ -96,7 +102,7 @@ function saveModel(params, epochs) {
     for (var k=0; k < hiddenSize; k++) {
       a2.push(a[j+k]);
     }
-    o += 'net_h1_w[' + i + '] = [' + a2.toString() + '];\r\n';
+    o += 'net_h1_w[' + i + '] = new Float32Array([' + a2.toString() + ']);\r\n';
   }
   
   //}}}
@@ -104,14 +110,14 @@ function saveModel(params, epochs) {
   
   var a  = params.b1;
   
-  o += 'const net_h1_b = new Array([' + a.toString() + ']);\r\n';
+  o += 'const net_h1_b = new Float32Array([' + a.toString() + ']);\r\n';
   
   //}}}
   //{{{  write o weights
   
   var a = params.W2;
   
-  o += 'const net_o_w = new Array([' + a.toString() + ']);\r\n';
+  o += 'const net_o_w = new Float32Array([' + a.toString() + ']);\r\n';
   
   //}}}
   //{{{  write o bias
@@ -251,13 +257,13 @@ const chNum = {'8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2, '1': 1};
 function decodeLine(line) {
   const parts = line.split(' ');
 
-  if (parts.length != 2) {
+  if (parts.length != 5) {
     console.log('line format', line);
     process.exit();
   }
 
   const board = parts[0].trim();
-  const target = parseFloat(parts[1].trim());
+  const target = parseFloat(parts[4].trim());
 
   var x = 0;
   var sq = 0;
@@ -298,67 +304,101 @@ function decodeLine(line) {
 }
 
 //}}}
+//{{{  calculateDatasetLoss
+
+async function calculateDatasetLoss(filename, params) {
+  const fileStream = fs.createReadStream(filename);
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+
+  let totalLoss = 0;
+  let count = 0;
+
+  for await (const line of rl) {
+    const {activeIndices, target} = decodeLine(line);
+    const forward = forwardPropagation([activeIndices], params);
+    const loss = Math.pow(forward.A2[0] - target[0], 2);
+    totalLoss += loss;
+    count++;
+    if ((count % 100000) == 0)
+      process.stdout.write(count + '\r');
+  }
+
+  rl.close();
+  return totalLoss / count;
+}
+
+//}}}
 //{{{  train
 
 async function train(filename) {
   let params = initializeParameters();
 
-  saveModel(params,0);
+  saveModel(params, 0);
 
   let t = 0;
 
   for (let epoch = 0; epoch < epochs; epoch++) {
-      const fileStream = fs.createReadStream(filename);
-      const rl = readline.createInterface({
-        input: fileStream,
-        crlfDelay: Infinity
-      });
+    const fileStream = fs.createReadStream(filename);
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
 
-      let batchActiveIndices = [];
-      let batchTargets = [];
-      let batchCount = 0;
-      let totalLoss = 0;
+    let batchActiveIndices = [];
+    let batchTargets = [];
+    let batchCount = 0;
+    let totalLoss = 0;
 
-      for await (const line of rl) {
-        const {activeIndices, target} = decodeLine(line);
+    for await (const line of rl) {
+      const {activeIndices, target} = decodeLine(line);
 
-        batchActiveIndices.push(activeIndices);
-        batchTargets.push(target[0]);
+      batchActiveIndices.push(activeIndices);
+      batchTargets.push(target[0]);
 
-        if (batchActiveIndices.length === batchSize) {
-          t++;
-          const forward = forwardPropagation(batchActiveIndices, params);
-          const grads = backwardPropagation(batchActiveIndices, batchTargets, params, forward);
-          params = updateParameters(params, grads, t);
+      if (batchActiveIndices.length === batchSize) {
+        t++;
+        const forward = forwardPropagation(batchActiveIndices, params);
+        const grads = backwardPropagation(batchActiveIndices, batchTargets, params, forward);
+        params = updateParameters(params, grads, t);
 
-          const batchLoss = forward.A2.reduce((sum, pred, i) =>
-            sum + Math.pow(pred - batchTargets[i], 2), 0) / batchSize;
-          totalLoss += batchLoss;
-          batchCount++;
+        const batchLoss = forward.A2.reduce((sum, pred, i) =>
+          sum + Math.pow(pred - batchTargets[i], 2), 0) / batchSize;
+        totalLoss += batchLoss;
+        batchCount++;
 
-          batchActiveIndices = [];
-          batchTargets = [];
+        batchActiveIndices = [];
+        batchTargets = [];
 
-          if (batchCount % 10 === 0) {
-            process.stdout.write(`Epoch ${epoch + 1}, Batch ${batchCount}, Average Loss: ${totalLoss / batchCount}\r`);
-          }
+        if (batchCount % 10 === 0) {
+          process.stdout.write(`Epoch ${epoch + 1}, Batch ${batchCount}, Average Loss: ${totalLoss / batchCount}\r`);
         }
       }
-
-      console.log(`Epoch ${epoch + 1} completed. Average Loss: ${totalLoss / batchCount}`);
-      rl.close();
-      saveModel(params, epoch+1);
     }
 
-    return params;
+    console.log(`Epoch ${epoch + 1} completed. Average Batch Loss: ${totalLoss / batchCount}`);
+    saveModel(params, epoch + 1);
+
+    if ((epoch + 1) % 10 === 0) {
+      const datasetLoss = await calculateDatasetLoss(filename, params);
+      console.log(`Dataset Loss after ${epoch + 1} epochs: ${datasetLoss}`);
+    }
+
+    rl.close();
+  }
+
+  return params;
 }
 
 //}}}
+
+console.log('hidden',hiddenSize,'crelu',useCReLU,'stretch',K);
 
 train(dataFile).then(params => {
     console.log('Training completed.');
 }).catch(error => {
     console.error('Error during training:', error);
 });
-
 

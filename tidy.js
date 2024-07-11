@@ -8,30 +8,35 @@ const readline = require('readline');
 /*{{{  getprob*/
 
 function getprob (r) {
+
   if (r == '1/2-1/2')
     return 0.5;
   else if (r == '1-0')
     return 1.0;
   else if (r == '0-1')
     return 0.0;
+
   else if (r == '"1/2-1/2"')
     return 0.5;
   else if (r == '"1-0"')
     return 1.0;
   else if (r == '"0-1"')
     return 0.0;
+
   else if (r == '[0.5]')
     return 0.5;
   else if (r == '[1.0]')
     return 1.0;
   else if (r == '[0.0]')
     return 0.0;
+
   else if (r == '0.5')
     return 0.5;
   else if (r == '1.0')
     return 1.0;
   else if (r == '0.0')
     return 0.0;
+
   else {
     console.log('unknown result',r);
     process.exit();
@@ -40,9 +45,10 @@ function getprob (r) {
 
 /*}}}*/
 
-const epdFile = 'data/lichess-big3-resolved.epd';
-const wdl     = 6;
+const epdFile = 'data/quiet-labeled.epd';
+const wdl     = 5;
 const bi      = 0;
+const n       = 6;
 
 const rl = readline.createInterface({
     input: fs.createReadStream(epdFile),
@@ -68,7 +74,10 @@ rl.on('line', function (line) {
   if (!parts.length)
     return;
   
-  console.log(parts[bi],getprob(parts[wdl]));
+  if (parts.length != n)
+    return;
+  
+  console.log(parts[bi],parts[bi+1],parts[bi+2],parts[bi+3],getprob(parts[wdl]));
   
   /*}}}*/
 });
