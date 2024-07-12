@@ -14,15 +14,15 @@ Runs in [Node](https://nodejs.org/en) which is available for pretty much every p
 
 ```
 c:> node cwtch
-ucinewgame
-net
-bench
+u                       # shortcut for ucinewgame
+net                     # show net info and some metrics
+bench                   # useful time and node count when testing
 position startpos
-board
+board                   # display the board
 go depth 5
-eval
-et
-q
+eval                    # show eval of current position 
+et                      # eval tests
+q                       # quit
 ```
 
 ## Chess User Interfaces
