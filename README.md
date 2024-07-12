@@ -17,14 +17,17 @@ c:> node cwtch
 u                       # shortcut for ucinewgame
 net                     # show net info and some metrics
 bench                   # useful time and node count when testing
-position startpos
+p s                     # shortcut for position startpos
 board                   # display the board
-go depth 5
-eval                    # show eval of current position 
+g d 5                   # shortcut for go depth 5
+e                       # show eval of current position 
 et                      # eval tests
 q                       # quit
 ```
-
+`pt` does perft tests but takes a long time:-
+```
+c:> node cwtch pt q
+```
 ## Chess User Interfaces
 
 Can be run in chess UIs by using node as the exectable and cwtch.js as an argument or using a batch file etc.
