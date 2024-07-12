@@ -25,7 +25,7 @@ et
 q
 ```
 
-## Chess UIs
+## Chess User Interfaces
 
 Can be run in chess UIs by using node as the exectable and cwtch.js as an argument or using a batch file etc.
 
