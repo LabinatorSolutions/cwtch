@@ -1,5 +1,7 @@
 //
-// Write tidy epds to stdout.
+// write tidy epds to stdout for use with trainer.js.
+//
+// usage: node tidy > file
 //
 
 const fs       = require('fs');
@@ -45,10 +47,10 @@ function getprob (r) {
 
 /*}}}*/
 
-const epdFile = 'data/quiet-labeled.epd';
-const wdl     = 5;
-const bi      = 0;
-const n       = 6;
+const epdFile = ''; // file to tidy
+const wdl     = 5;  // index of wdl - extend getprob() as needed
+const bi      = 0;  // index of board
+const n       = 6;  // number space separated elements per line
 
 const rl = readline.createInterface({
     input: fs.createReadStream(epdFile),

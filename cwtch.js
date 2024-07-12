@@ -1,3 +1,9 @@
+//
+// uci chess engine with nnue eval
+//
+// usage: node cwtch [uci commands]
+// example: node cwtch u n "position startpos" b "go depth 5" bench
+//
 
 (function() {
 

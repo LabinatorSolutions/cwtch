@@ -1,10 +1,13 @@
-
-// call with --expose-gc
+//
+// shuffle lines in a large file with chunkSize granulatiry.
+//
+// usage: node --expose-gc shuffle
+//
 
 const fs = require('fs');
 const readline = require('readline');
 
-const epdFile     = 'data/tidy';
+const epdFile     = 'data/tidy.epd';
 const shuffleFile = 'data/shuffled_tidy.epd';
 const chunkSize   = 4000000;
 

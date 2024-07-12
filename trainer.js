@@ -1,3 +1,8 @@
+//
+// simple 768 x N x 1 trainer.
+//
+// usage: node trainer
+//
 
 //{{{  lang fold
 
