@@ -9,7 +9,7 @@ const readline = require('readline');
 const dataFile = 'data/tidy.epd';
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
-const hiddenSize = 20;
+const hiddenSize = 64;
 const outputSize = 1;
 const batchSize = 1000;
 const epochs = 10000;
@@ -76,9 +76,9 @@ function initializeParameters() {
 
 function saveModel(params, epochs) {
 
-  let acti = 'relu');
+  let acti = 'relu';
   if (useCReLU)
-    acti = 'crelu');
+    acti = 'crelu';
 
   var o = '//{{{  weights\r\n';
 
