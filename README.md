@@ -30,6 +30,6 @@ c:> node cwtch pt q
 ```
 ## Chess User Interfaces
 
-Can be run in chess UIs by using node as the exectable and cwtch.js as an argument or using a batch file etc.
+Can be run in chess UIs by using Node as the exectable and cwtch.js as an argument or using a batch file etc.
 
 
