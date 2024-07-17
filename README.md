@@ -6,8 +6,6 @@ In development but usable.
 
 See uciExec() for command rep.
 
-Currently a full width PVS searcher without any reductions or beta pruning or null move etc.
-
 Runs in [Node](https://nodejs.org/en) which is available for pretty much every platform.
 
 ## Example
