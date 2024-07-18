@@ -36,7 +36,7 @@ Currently the network is simple unquantized relu white-relative 768 -> 70 -> 1 n
 
 ## The Trainer
 
-The trainer is Javascript running in Node with a sigmoid stretch of 100. It does not use any network libraries. It generates weights in Javascript syntax that can be copied into the engine. It streams batches fomr a single file and does not use much memory.
+The trainer is Javascript running in Node with a sigmoid stretch of 100. It does not use any network libraries. It generates weights in Javascript syntax that can be copied into the engine. It streams batches from a single file and does not use much memory.
 
 
 
