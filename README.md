@@ -1,6 +1,6 @@
 # Cwtch
 
-Javascript UCI chess engine with NNUE eval.
+A Javascript UCI chess engine with NNUE eval.
 
 In development but usable. 
 
@@ -36,7 +36,7 @@ Currently the network is simple relu white-relative 768 -> 70 -> 1 net trained o
 
 ## The Trainer
 
-The trainer is DIY Javascript running in Node with a sigmoid stretch of 100.  It generates weights in Javascript syntax that can be copied into the engine. It streaks batches fomr a single file and does not use much memory.
+The trainer is DIY Javascript running in Node with a sigmoid stretch of 100.  It generates weights in Javascript syntax that can be copied into the engine. It streams batches fomr a single file and does not use much memory.
 
 
 
