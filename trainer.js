@@ -1,5 +1,5 @@
 //
-// simple 768 x N x 1 trainer.
+// simple 768 x N x 1 white-relative trainer.
 //
 // usage: node trainer
 //
@@ -14,7 +14,7 @@ const readline = require('readline');
 const dataFile = 'data/tidy.epd';
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
-const hiddenSize = 1;
+const hiddenSize = 80;
 const outputSize = 1;
 const batchSize = 500;
 const epochs = 10000;
@@ -90,6 +90,7 @@ function saveModel(params, epochs) {
   o += 'const net_h1_size    = '  + hiddenSize + ';\r\n';
   o += 'const net_activation = "' + acti       + '";\r\n';
   o += 'const net_stretch    = '  + K          + ';\r\n';
+  o += 'const net_batch_size = '  + batchSize  + ';\r\n';
   o += 'const net_epochs     = '  + epochs     + ';\r\n';
 
   o += '//{{{  weights\r\n';
