@@ -6,7 +6,7 @@ In development but usable.
 
 See uciExec() for command rep.
 
-Runs in [Node](https://nodejs.org/en) which is available for pretty much every platform.
+Cwtch runs in [Node](https://nodejs.org/en) which is available for pretty much every platform.
 
 ## Example
 
