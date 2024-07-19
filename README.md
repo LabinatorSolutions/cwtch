@@ -32,7 +32,7 @@ Cwtch can be run in chess UIs by using Node as the exectable and cwtch.js as an 
 
 ## The Network
 
-Currently the network is simple unquantized relu white-relative 768 -> 70 -> 1 net trained on a relatively small number of unshuffled EPDs (7.8M) from quiet_lebaled.epd and lichess-big3-resolved.epd. The future plan is to train from 'zero' and use my own data.
+Currently the topology is a simple unquantized relu white-relative 768 -> 70 -> 1 net.
 
 ## The Trainer
 
