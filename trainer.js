@@ -1,20 +1,19 @@
+//{{{  fold marker
+
+//}}}
 //
 // simple 768 x N x 1 white-relative trainer.
 //
 // usage: node trainer
 //
 
-//{{{  lang fold
-
-//}}}
-
 const fs = require('fs');
 const readline = require('readline');
 
-const dataFile = 'data/tidy.epd';
+const dataFile = 'data/datagen/gen1.epd';
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
-const hiddenSize = 80;
+const hiddenSize = 8;
 const outputSize = 1;
 const batchSize = 500;
 const epochs = 10000;
@@ -26,6 +25,23 @@ const beta2 = 0.999;
 const epsilon = 1e-7;
 const useCReLU = false;
 
+//{{{  prob
+
+function prob (wdl) {
+
+  if (wdl == 'd')
+    return 0.5;
+  else if (wdl == 'w')
+    return 1.0;
+  else if (wdl == 'b')
+    return 0.0;
+  else {
+    console.log('wdl problem',wdl);
+    process.exit();
+  }
+}
+
+//}}}
 //{{{  activations
 
 function relu(x) {
@@ -79,7 +95,7 @@ function initializeParameters() {
 //}}}
 //{{{  saveModel
 
-function saveModel(params, epochs) {
+function saveModel(loss, params, epochs) {
 
   let acti = 'relu';
   if (useCReLU)
@@ -88,10 +104,11 @@ function saveModel(params, epochs) {
   var o = '//{{{  weights\r\n';
 
   o += 'const net_h1_size    = '  + hiddenSize + ';\r\n';
+  o += 'const net_batch_size = '  + batchSize  + ';\r\n';
   o += 'const net_activation = "' + acti       + '";\r\n';
   o += 'const net_stretch    = '  + K          + ';\r\n';
-  o += 'const net_batch_size = '  + batchSize  + ';\r\n';
   o += 'const net_epochs     = '  + epochs     + ';\r\n';
+  o += 'const net_loss       = '  + loss       + ';\r\n';
 
   o += '//{{{  weights\r\n';
 
@@ -264,12 +281,12 @@ function decodeLine(line) {
   const parts = line.split(' ');
 
   if (parts.length != 5) {
-    console.log('line format', line);
+    console.log('line format', line, parts.length);
     process.exit();
   }
 
   const board = parts[0].trim();
-  const target = parseFloat(parts[4].trim());
+  const target = prob(parts[4].trim());
 
   var x = 0;
   var sq = 0;
@@ -340,9 +357,11 @@ async function calculateDatasetLoss(filename, params) {
 //{{{  train
 
 async function train(filename) {
-  let params = initializeParameters();
 
-  saveModel(params, 0);
+  let params = initializeParameters();
+  let datasetLoss = 0;
+
+  saveModel(0, params, 0);
 
   let t = 0;
 
@@ -378,19 +397,20 @@ async function train(filename) {
         batchActiveIndices = [];
         batchTargets = [];
 
-        if (batchCount % 10 === 0) {
+        if (batchCount % 100 === 0) {
           process.stdout.write(`Epoch ${epoch + 1}, Batch ${batchCount}, Average Loss: ${totalLoss / batchCount}\r`);
         }
       }
     }
 
     console.log(`Epoch ${epoch + 1} completed. Average Batch Loss: ${totalLoss / batchCount}`);
-    saveModel(params, epoch + 1);
 
     if ((epoch + 1) % 10 === 0) {
-      const datasetLoss = await calculateDatasetLoss(filename, params);
+      datasetLoss = await calculateDatasetLoss(filename, params);
       console.log(`Dataset Loss after ${epoch + 1} epochs: ${datasetLoss}`);
     }
+
+    saveModel(datasetLoss, params, epoch + 1);
 
     rl.close();
   }
