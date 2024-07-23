@@ -1,0 +1,18 @@
+[
+{
+  "name": "coal",
+  "command": "/home/xyzzy/.nvm/versions/node/v22.3.0/bin/node /home/xyzzy/cwtch/cwtch.js",
+  "protocol": "uci"
+},
+{
+  "name": "cand",
+  "command": "/home/xyzzy/.nvm/versions/node/v22.3.0/bin/node /home/xyzzy/cwtch/cwtchcand.js",
+  "protocol": "uci"
+},
+{
+  "name": "lozza",
+  "command": "/home/xyzzy/.nvm/versions/node/v22.3.0/bin/node /home/xyzzy/lozza/lozza.js",
+  "protocol": "uci"
+}
+]
+
