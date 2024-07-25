@@ -5,7 +5,7 @@ tc="tc=0/30+0.3"
 e1="-engine conf=coal $tc"
 e2="-engine conf=cand $tc"
 
-threads=4
+threads=6
 
 m="-recover -concurrency $threads"
 
@@ -21,7 +21,9 @@ s="-sprt elo0=0 elo1=5 alpha=0.05 beta=0.05"
 
 v="-ratinginterval 10"
 
-echo $e1 $e2 $t $r $d $o $v $m $s
+f="-pgnout data/fens/$RAMDOM$RANDOM.pgn fi min"
 
-../cutechess-ob $e1 $e2 $t $r $d $o $f $v $m $s $1 | tee cutechess.log
+echo $e1 $e2 $t $r $d $o $v $m $s $f
+
+../cutechess-ob $e1 $e2 $t $r $d $o $v $m $s $1 $f | tee cutechess.log
 
