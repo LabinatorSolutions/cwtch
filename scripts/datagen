@@ -1,16 +1,3 @@
 #!/bin/bash
 
-tc="tc=0/10+0.1"
-
-e1="-engine conf=coal $tc nodes=6000 initstr=datagen"
-e2="-engine conf=coal $tc nodes=6000 initstr=datagen"
-
-threads=1
-
-m="-recover -concurrency $threads"
-
-t="-event datagen -tournament round-robin -games 60000"
-
-v="-ratinginterval 10"
-
-../cutechess-ob $e1 $e2 $t $v $m -pgnout data/datagen/$RANDOM$RANDOM.pgn min fi $1 
+../fast-chess/fast-chess -engine cmd=./cwtch.js name=a -engine cmd=./cwtch.js name=b -each nodes=6000 args=datagen tc=10+0.1 -rounds 100000 -concurrency 6 -pgnout file=data/datagen/$RANDOM$RANDOM.pgn notation=uci  
