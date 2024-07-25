@@ -1,3 +1,0 @@
-#!/bin/bash
-
-../fast-chess/fast-chess -engine cmd=./cwtch.js name=a -engine cmd=./cwtch.js name=b -each nodes=6000 args=datagen tc=10+0.1 -rounds 100000 -concurrency 6 -pgnout file=data/datagen/$RANDOM$RANDOM.pgn notation=uci  
