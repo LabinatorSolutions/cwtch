@@ -2646,7 +2646,9 @@
   
       //{{{  init new game
       
-      process.stdout.write(g+'\r');
+      const percent = g/games * 100 | 0;
+      
+      process.stdout.write(g + '/' + games + ' ' + percent + '%\r');
       
       this.newGame();
       
@@ -2667,8 +2669,8 @@
         const list     = this.cxList[cx];
         const inCheck  = this.isKingAttacked(list[LKING], nextTurn);
         
-        if (ply)
-          fens[ply-1] = fens[ply-1] + ((inCheck) ? 'g ' : '- ');
+        if (fens.length > 0)
+          fens[fens.length-1] = fens[fens.length-1] + ((inCheck) ? 'g ' : '- ');
         
         let wdl = '';
         const rm = this.randomMove();
