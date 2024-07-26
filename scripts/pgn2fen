@@ -1,1 +1,0 @@
-../../../pgn-extract/pgn-extract -Wfen -s $1 | sed '/^$/d; /^\[/d'
