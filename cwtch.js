@@ -88,6 +88,7 @@
   const IS_WE      = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   const IS_WP      = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   const IS_WN      = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const IS_WNB     = [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   const IS_WNBRQ   = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   const IS_WPNBRQ  = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   const IS_WPNBRQE = [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -102,6 +103,7 @@
   const IS_BE      = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
   const IS_BP      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
   const IS_BN      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
+  const IS_BNB     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0];
   const IS_BNBRQ   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0];
   const IS_BPNBRQ  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0];
   const IS_BPNBRQE = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0];
@@ -737,7 +739,7 @@
         }
   
         if (ttMove)
-          uciLog('info invalid tt move', formatMove(ttMove), l.fen(), this.ply); //hack
+          uciLog('info invalid tt move', formatMove(ttMove), l.fen(0), this.ply); //hack
   
       case 1:
   
@@ -1856,7 +1858,7 @@
         case 'f': {
           //{{{  fen
           
-          console.log(this.fen());
+          console.log(this.fen(0));
           
           break;
           
@@ -2401,6 +2403,9 @@
       
         //if (depth-1-R < 1)
           //R = depth-2;
+      
+        //if (inCheck)
+          //R = -1;
       }
       
       //}}}
@@ -2481,13 +2486,13 @@
     
     node.ttMove = 0;
     
-    const i = this.ttIndex();
+    const ttIndex = this.ttIndex();
     
-    if (i) {
+    if (ttIndex) {
     
-      const ttFlags = this.ttFlags[i];
-      const ttScore = this.ttScore[i];
-      const ttMove  = this.ttMove[i];
+      const ttFlags = this.ttFlags[ttIndex];
+      const ttScore = this.ttScore[ttIndex];
+      const ttMove  = this.ttMove[ttIndex];
     
       if (ttFlags == TT_EXACT ||
          (ttFlags == TT_BETA  && ttScore >= beta) ||
@@ -2502,7 +2507,11 @@
     
     //}}}
   
-    const e = this.netFastEval();
+    let e = 0;
+    if (ttIndex)
+      e = this.ttEval[ttIndex];
+    else
+      e = this.netFastEval();
   
     if (e >= beta)
       return e;
@@ -2641,6 +2650,8 @@
     fs.writeFileSync(file,'');
   
     let out = '';
+    let score = 0;
+    let move = 0;
   
     for (let g=0; g < games; g++) {
   
@@ -2656,6 +2667,7 @@
       
       let ply  = 0;
       let fens = [];
+      let good = 0;
       
       //}}}
   
@@ -2670,13 +2682,18 @@
         const inCheck  = this.isKingAttacked(list[LKING], nextTurn);
         
         if (fens.length > 0)
-          fens[fens.length-1] = fens[fens.length-1] + ((inCheck) ? 'g ' : '- ');
+          fens[fens.length-1] = fens[fens.length-1] + ((inCheck) ? 'g ' : '- ');  // update gives check
+        
+        //{{{  end of game?
         
         let wdl = '';
-        const rm = this.randomMove();
+        
+        const rm = this.randomMove();  // return 0 if no moves
         
         if (rm == 0) {
+        
           wdl = '0.5';
+        
           if (inCheck) {
             if (turn == BLACK)
               wdl = '1.0';
@@ -2684,36 +2701,52 @@
               wdl = '0.0';
           }
         }
+        
+        else if (good > 20) {
+          if (score > 0)
+            wdl = '1.0';
+          else
+            wdl = '0.0';
+        }
+        
         else if (this.isDraw())
+        
           wdl = '0.5';
-        else if (this.hHistoryNext - this.hHistoryLimit > 40)
+        
+        else if (this.hHistoryNext - this.hHistoryLimit > 60)
+        
           wdl = '0.5';
+        
+        //}}}
         
         if (wdl.length) {
         
+          //{{{  update fens and buffer
+          
           for (var i=0; i < fens.length; i++)
             fens[i] = fens[i] + wdl;
-        
+          
           for (var i=0; i < fens.length; i++)
             out += fens[i] + '\r\n';
-        
-          if (out.length > 1000000) {
+          
+           if (out.length > 1000000) {
             fs.appendFileSync(file,out);
              out = '';
           }
+          
+          //}}}
         
-          //console.log('nodes',this.nodeCount);
           break;
         }
         
-        
         //}}}
-  
+        //{{{  build fen
+        
         const fen = this.fen(ply+1);
-  
-        move  = 0;
-        let score = 0;
-  
+        
+        move  = 0
+        score = 0;
+        
         if (ply < random) {
           move  = this.randomMove();
           score = 99999;
@@ -2722,11 +2755,15 @@
           this.uciExec('go nodes ' + hardNodes + ' softnodes ' + softNodes);
           move  = this.bestMove;
           score = this.bestScore;
+          if (Math.abs(score) > 600)
+            good++;
+          else
+            good = 0;
         }
-  
+        
         if (this.turn == BLACK)
           score = -score;
-  
+        
         let fenStr = '';
         fenStr += fen + ' ';
         fenStr += score.toString() + ' ';
@@ -2734,13 +2771,13 @@
         fenStr += (moveIsNoisy(move)) ? 'n ' : '- ';
         //fenStr += (move & MOVE_PROMOTE_MASK) ? 'p ' : '- ';
         fenStr += (inCheck) ? 'c ' : '- ';
-  
+        
         if (ply >= first)
           fens.push(fenStr);
+        
+        //}}}
   
         this.makeMove(move);
-  
-        //console.log(g,ply,fenStr,this.hHistoryNext,this.hHistoryLimit,this.wList[LCOUNT],this.bList[LCOUNT],this.isDraw());
   
         ply++;
       }
@@ -2752,6 +2789,7 @@
     }
   
     this.quiet = 0;
+  
     console.log('written',games,'games to',file);
   }
   
@@ -4096,7 +4134,7 @@
   
     console.log();
   
-    console.log(this.fen());
+    console.log(this.fen(0));
     console.log('hash',this.hHi[0],this.hLo[0]);
   
     console.log('w list',this.wList.toString());
@@ -4157,7 +4195,7 @@
     else
       fen += ' -';
   
-    fen += ' 0 ' + ply;
+    fen += ' ' + (this.hHistoryNext - this.hHistoryLimit) + ' ' + ply;
   
     return fen;
   }
@@ -4223,20 +4261,14 @@
     if (this.hHistoryNext - this.hHistoryLimit > 100)
       return true;
   
-    if (this.wList[LCOUNT] == 1 && this.bList[LCOUNT] == 1)
-      return true;
+    //if ((this.wList[LCOUNT] + this.bList[LCOUNT]) == 2)
+      //return true;
   
-    if (this.wList[LCOUNT] == 1 && this.bList[LCOUNT] == 2 && this.board[this.bList[2]] == KNIGHT|BLACK)
-      return true;
+   // if (this.wList[LCOUNT] == 1 && this.bList[LCOUNT] == 2 && IS_BNB[this.board[this.bList[2]]])
+     // return true;
   
-    if (this.wList[LCOUNT] == 1 && this.bList[LCOUNT] == 2 && this.board[this.bList[2]] == BISHOP|BLACK)
-      return true;
-  
-    if (this.bList[LCOUNT] == 1 && this.wList[LCOUNT] == 2 && this.board[this.wList[2]] == KNIGHT|WHITE)
-      return true;
-  
-    if (this.bList[LCOUNT] == 1 && this.wList[LCOUNT] == 2 && this.board[this.wList[2]] == BISHOP|WHITE)
-      return true;
+  //  if (this.bList[LCOUNT] == 1 && this.wList[LCOUNT] == 2 && IS_WNB[this.board[this.wList[2]]])
+    //  return true;
   
     let count = 0;
   
