@@ -1,19 +1,22 @@
-//{{{  fold marker
-
-//}}}
 //
 // simple 768 x N x 1 white-relative trainer.
 //
-// usage: node trainer
+// use: node trainer
 //
+//{{{  lang fold
+/*
+
+*/
+
+//}}}
 
 const fs = require('fs');
 const readline = require('readline');
 
-const dataFile = 'data/datagen/gen1.epd';
-const weightsFile = 'data/weights.js';
+const dataFile = 'data/ql3.epd';
+let   weightsFile = 'data/weights.js';
 const inputSize = 768;
-const hiddenSize = 8;
+const hiddenSize = 64;
 const outputSize = 1;
 const batchSize = 500;
 const epochs = 10000;
@@ -23,7 +26,9 @@ const maxActiveInputs = 32;
 const beta1 = 0.9;
 const beta2 = 0.999;
 const epsilon = 1e-7;
-const useCReLU = false;
+const acti = 1;  // relu
+
+let minLoss = 9999;
 
 //{{{  prob
 
@@ -44,28 +49,79 @@ function prob (wdl) {
 //}}}
 //{{{  activations
 
+function sigmoid(x) {
+  return 1 / (1 + Math.exp(-x / K));
+}
+
 function relu(x) {
   return Math.max(0, x);
+}
+
+function drelu(x) {
+  return x > 0 ? 1 : 0;
 }
 
 function crelu(x) {
   return Math.min(Math.max(x, 0), 1);
 }
 
-function activationFunction(x) {
-  return useCReLU ? crelu(x) : relu(x);
+function dcrelu(x) {
+  return (x > 0 && x < 1) ? 1 : 0;
 }
 
-function activationDerivative(x) {
-  if (useCReLU) {
-    return (x > 0 && x < 1) ? 1 : 0;
-  } else {
-    return x > 0 ? 1 : 0;
+function srelu(x) {
+  return Math.max(0, x) * Math.max(0, x);
+}
+
+function dsrelu(x) {
+  return x > 0 ? 2 : 0;
+}
+
+function screlu(x) {
+  return Math.min(Math.max(x, 0), 1) * Math.min(Math.max(x, 0), 1);
+}
+
+function dscrelu(x) {
+  return (x > 0 && x < 1) ? 2 : 0;
+}
+
+function activationFunction(x) {
+  switch (acti) {
+    case 1:
+      return relu(x);
+    case 2:
+      return crelu(x);
+    case 3:
+      return srelu(x);
+    case 4:
+      return screlu(x);
   }
 }
 
-function sigmoid(x) {
-  return 1 / (1 + Math.exp(-x / K));
+function activationDerivative(x) {
+  switch (acti) {
+    case 1:
+      return drelu(x);
+    case 2:
+      return dcrelu(x);
+    case 3:
+      return dsrelu(x);
+    case 4:
+      return dscrelu(x);
+  }
+}
+
+function activationName(x) {
+  switch (acti) {
+    case 1:
+      return "relu";
+    case 2:
+      return "crelu";
+    case 3:
+      return "srelu";
+    case 4:
+      return "screlu";
+  }
 }
 
 //}}}
@@ -97,15 +153,13 @@ function initializeParameters() {
 
 function saveModel(loss, params, epochs) {
 
-  let acti = 'relu';
-  if (useCReLU)
-    acti = 'crelu';
+  const actiName = activationName(acti);
 
   var o = '//{{{  weights\r\n';
 
   o += 'const net_h1_size    = '  + hiddenSize + ';\r\n';
   o += 'const net_batch_size = '  + batchSize  + ';\r\n';
-  o += 'const net_activation = "' + acti       + '";\r\n';
+  o += 'const net_activation = "' + actiName   + '";\r\n';
   o += 'const net_stretch    = '  + K          + ';\r\n';
   o += 'const net_epochs     = '  + epochs     + ';\r\n';
   o += 'const net_loss       = '  + loss       + ';\r\n';
@@ -406,8 +460,17 @@ async function train(filename) {
     console.log(`Epoch ${epoch + 1} completed. Average Batch Loss: ${totalLoss / batchCount}`);
 
     if ((epoch + 1) % 10 === 0) {
+      let marker = '';
       datasetLoss = await calculateDatasetLoss(filename, params);
-      console.log(`Dataset Loss after ${epoch + 1} epochs: ${datasetLoss}`);
+      if (datasetLoss < minLoss) {
+        minLoss = datasetLoss;
+        marker = '***';
+      }
+      console.log(`Dataset Loss after ${epoch + 1} epochs: ${datasetLoss} ${marker}`);
+      const wCache = weightsFile;
+      weightsFile = 'data/e' + (epoch+1) + '.js';
+      saveModel(datasetLoss, params, epoch + 1);
+      weightsFile = wCache;
     }
 
     saveModel(datasetLoss, params, epoch + 1);
