@@ -17,20 +17,24 @@ const hiddenSize   = 75;
 const batchSize    = 500;
 const learningRate = 0.001;
 const K            = 100;
-const acti         = 1;    // relu
+const acti         = 1;    // relu - see activations fold
 const interp       = 0.5;
 
-const reportRate = 50;
-const lossRate = 10;
+const reportRate = 50; // mean batch loss freq during epoch
+const lossRate = 10;   // dataset loss freq
+const epochs = 10000;
 const dataFile = 'data/data.shuf';
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
 const outputSize = 1;
-const epochs = 10000;
 const maxActiveInputs = 32;
 const beta1 = 0.9;
 const beta2 = 0.999;
 const epsilon = 1e-7;
+const useL2Reg = false;
+const l2RegFactor = 0.001;
+const useAdamW = false;
+const weightDecay = 0.01;
 
 let minLoss = 9999;
 let numBatches = 0;
@@ -126,6 +130,7 @@ function activationName(x) {
 //{{{  initializeParameters
 
 function initializeParameters() {
+
     const scale = Math.sqrt(2 / inputSize);
 
     const params = {
@@ -216,6 +221,7 @@ function saveModel(loss, params, epochs) {
 //{{{  forwardPropagation
 
 function forwardPropagation(activeIndices, params) {
+
   const Z1 = new Float32Array(activeIndices.length * hiddenSize);
   const A1 = new Float32Array(activeIndices.length * hiddenSize);
   const Z2 = new Float32Array(activeIndices.length);
@@ -235,6 +241,7 @@ function forwardPropagation(activeIndices, params) {
     }
     A2[i] = sigmoid(Z2[i]);
   }
+
   return { Z1, A1, Z2, A2 };
 }
 
@@ -242,6 +249,7 @@ function forwardPropagation(activeIndices, params) {
 //{{{  backwardPropagation
 
 function backwardPropagation(activeIndices, targets, params, forward) {
+
   const m = activeIndices.length;
   const dZ2 = new Float32Array(m);
   const dW2 = new Float32Array(hiddenSize);
@@ -285,12 +293,20 @@ function backwardPropagation(activeIndices, targets, params, forward) {
 //{{{  updateParameters
 
 function updateParameters(params, grads, t) {
+
   const updateParam = (param, grad, v, s, i) => {
     v[i] = beta1 * v[i] + (1 - beta1) * grad[i];
     s[i] = beta2 * s[i] + (1 - beta2) * grad[i] * grad[i];
     const vCorrected = v[i] / (1 - Math.pow(beta1, t));
     const sCorrected = s[i] / (1 - Math.pow(beta2, t));
-    return param[i] - learningRate * vCorrected / (Math.sqrt(sCorrected) + epsilon);
+    let update = learningRate * vCorrected / (Math.sqrt(sCorrected) + epsilon);
+    if (useL2Reg) {
+      update += l2RegFactor * param[i]; // Apply L2 regularization
+    }
+    if (useAdamW) {
+      param[i] -= learningRate * weightDecay * param[i]; // ADAMW weight decay
+    }
+    return param[i] - update;
   };
 
   for (let i = 0; i < inputSize * hiddenSize; i++) {
@@ -491,17 +507,19 @@ async function train(filename) {
   let t = 0;
 
   for (let epoch = 0; epoch < epochs; epoch++) {
+    //{{{  train epoch
+    
     const fileStream = fs.createReadStream(filename);
     const rl = readline.createInterface({
       input: fileStream,
       crlfDelay: Infinity
     });
-
+    
     let batchActiveIndices = [];
     let batchTargets = [];
     let batchCount = 0;
     let totalLoss = 0;
-
+    
     for await (const line of rl) {
       const {activeIndices, target} = decodeLine(line);
       if (activeIndices.length) {
@@ -511,13 +529,17 @@ async function train(filename) {
         batchTargets.push(target[0]);
         
         if (batchActiveIndices.length === batchSize) {
+        
           t++;
+        
           const forward = forwardPropagation(batchActiveIndices, params);
           const grads = backwardPropagation(batchActiveIndices, batchTargets, params, forward);
+        
           params = updateParameters(params, grads, t);
         
           const batchLoss = forward.A2.reduce((sum, pred, i) =>
             sum + Math.pow(pred - batchTargets[i], 2), 0) / batchSize;
+        
           totalLoss += batchLoss;
           batchCount++;
         
@@ -532,22 +554,31 @@ async function train(filename) {
         //}}}
       }
     }
-
+    
     console.log(`Epoch ${epoch + 1} completed. Mean Batch Loss: ${totalLoss / batchCount}`);
-
+    
+    //{{{  calc dataset loss
+    
     if ((epoch + 1) % lossRate === 0) {
+    
       let marker = '';
       datasetLoss = await calculateDatasetLoss(filename, params);
+    
       if (datasetLoss < minLoss) {
         minLoss = datasetLoss;
         marker = '***';
       }
+    
       console.log(`Dataset Loss after ${epoch + 1} epochs: ${datasetLoss} ${marker}`);
     }
-
+    
+    //}}}
+    
     saveModel(datasetLoss, params, epoch + 1);
-
+    
     rl.close();
+    
+    //}}}
   }
 
   return params;
