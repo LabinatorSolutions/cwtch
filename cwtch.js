@@ -1896,9 +1896,12 @@
           //{{{  net info
           
           console.log('h1 size', net_h1_size);
+          console.log('lr', net_lr);
           console.log('batch size', net_batch_size);
           console.log('activation', net_activation);
           console.log('stretch', net_stretch);
+          console.log('interp', net_interp);
+          console.log('num_batches', net_num_batches);
           console.log('epochs', net_epochs);
           console.log('loss', net_loss);
           
@@ -2175,9 +2178,7 @@
     
     //}}}
     //{{{  mate distance pruning
-    
-    /* hack
-    
+    /*
     if (!rootNode) {
     
       let matingValue = MATE - node.ply;
@@ -2196,9 +2197,7 @@
            return matingValue;
       }
     }
-    
-    */
-    
+    hack */
     //}}}
   
     const turn     = this.turn;
@@ -2750,6 +2749,10 @@
         if (ply < random) {
           move  = this.randomMove();
           score = 99999;
+          if (move == 0) {
+            console.log('0 move random');
+            this.printBoard();
+          }
         }
         else {
           this.uciExec('go nodes ' + hardNodes + ' softnodes ' + softNodes);
@@ -2759,6 +2762,10 @@
             good++;
           else
             good = 0;
+          if (move == 0) { //hack
+            console.log('0 move search');
+            this.printBoard();
+          }
         }
         
         if (this.turn == BLACK)
@@ -3143,6 +3150,12 @@
     const frList = this.objList[frObj];
     const toPtr  = this.listPtr[to];
     const frPtr  = this.listPtr[fr];
+  
+  
+    if (frList === null) { //hack
+      console.log(fr,to,frObj,toObj,toPtr,frPtr,formatMove(move),move, this.turn, this.wList[0], this.bList[0]);
+      this.printBoard();
+    }
   
     //this.netDel(frObj,fr);
     //this.netDel(toObj,to);
@@ -4086,7 +4099,7 @@
   cwtchStruct.prototype.areWeOutOfTime = function () {
   
     return (this.bestMove && this.finishTime && Date.now() > this.finishTime) ||
-           (this.targetNodes && this.nodeCount >= this.targetNodes);
+           (this.bestMove && this.targetNodes && this.nodeCount >= this.targetNodes);
   
   }
   
@@ -4185,7 +4198,7 @@
       if (this.rights & BLACK_RIGHTS_KING)
         fen += 'k';
       if (this.rights & BLACK_RIGHTS_QUEEN)
-        fen += 'Q';
+        fen += 'q';
     }
     else
       fen += ' -';
@@ -4261,14 +4274,14 @@
     if (this.hHistoryNext - this.hHistoryLimit > 100)
       return true;
   
-    //if ((this.wList[LCOUNT] + this.bList[LCOUNT]) == 2)
-      //return true;
+    if ((this.wList[LCOUNT] + this.bList[LCOUNT]) == 2)
+      return true;
   
-   // if (this.wList[LCOUNT] == 1 && this.bList[LCOUNT] == 2 && IS_BNB[this.board[this.bList[2]]])
-     // return true;
+    if (this.wList[LCOUNT] == 1 && this.bList[LCOUNT] == 2 && IS_BNB[this.board[this.bList[2]]])
+      return true;
   
-  //  if (this.bList[LCOUNT] == 1 && this.wList[LCOUNT] == 2 && IS_WNB[this.board[this.wList[2]]])
-    //  return true;
+    if (this.bList[LCOUNT] == 1 && this.wList[LCOUNT] == 2 && IS_WNB[this.board[this.wList[2]]])
+      return true;
   
     let count = 0;
   

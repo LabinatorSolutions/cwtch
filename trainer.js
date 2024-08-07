@@ -13,37 +13,35 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const dataFile = 'data/ql3.epd';
-let   weightsFile = 'data/weights.js';
-const inputSize = 768;
-const hiddenSize = 64;
-const outputSize = 1;
-const batchSize = 500;
-const epochs = 10000;
+const hiddenSize   = 75;
+const batchSize    = 500;
 const learningRate = 0.001;
-const K = 100;
+const K            = 100;
+const acti         = 1;    // relu
+const interp       = 0.5;
+
+const reportRate = 50;
+const lossRate = 10;
+const dataFile = 'data/data.shuf';
+const weightsFile = 'data/weights.js';
+const inputSize = 768;
+const outputSize = 1;
+const epochs = 10000;
 const maxActiveInputs = 32;
 const beta1 = 0.9;
 const beta2 = 0.999;
 const epsilon = 1e-7;
-const acti = 1;  // relu
 
 let minLoss = 9999;
+let numBatches = 0;
 
-//{{{  prob
+//{{{  lerp
 
-function prob (wdl) {
-
-  if (wdl == 'd')
-    return 0.5;
-  else if (wdl == 'w')
-    return 1.0;
-  else if (wdl == 'b')
-    return 0.0;
-  else {
-    console.log('wdl problem',wdl);
-    process.exit();
-  }
+function lerp(eval, wdl, t) {
+  let sg = sigmoid(eval);
+  let l = sg + (wdl - sg) * t;
+  //console.log(eval,sg,wdl,l);
+  return l;
 }
 
 //}}}
@@ -157,12 +155,15 @@ function saveModel(loss, params, epochs) {
 
   var o = '//{{{  weights\r\n';
 
-  o += 'const net_h1_size    = '  + hiddenSize + ';\r\n';
-  o += 'const net_batch_size = '  + batchSize  + ';\r\n';
-  o += 'const net_activation = "' + actiName   + '";\r\n';
-  o += 'const net_stretch    = '  + K          + ';\r\n';
-  o += 'const net_epochs     = '  + epochs     + ';\r\n';
-  o += 'const net_loss       = '  + loss       + ';\r\n';
+  o += 'const net_h1_size     = '  + hiddenSize   + ';\r\n';
+  o += 'const net_lr          = '  + learningRate + ';\r\n';
+  o += 'const net_batch_size  = '  + batchSize    + ';\r\n';
+  o += 'const net_activation  = "' + actiName     + '";\r\n';
+  o += 'const net_stretch     = '  + K            + ';\r\n';
+  o += 'const net_interp      = '  + interp       + ';\r\n';
+  o += 'const net_num_batches = '  + numBatches   + ';\r\n';
+  o += 'const net_epochs      = '  + epochs       + ';\r\n';
+  o += 'const net_loss        = '  + loss         + ';\r\n';
 
   o += '//{{{  weights\r\n';
 
@@ -309,6 +310,8 @@ function updateParameters(params, grads, t) {
 //}}}
 //{{{  decodeLine
 
+//{{{  constants
+
 const WHITE = 0;
 const BLACK = 1;
 
@@ -331,59 +334,77 @@ const chCol = {
 
 const chNum = {'8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2, '1': 1};
 
+//}}}
+
 function decodeLine(line) {
+
   const parts = line.split(' ');
 
-  if (parts.length != 5) {
-    console.log('line format', line, parts.length);
-    process.exit();
-  }
-
   const board = parts[0].trim();
-  const target = prob(parts[4].trim());
+  const eval  = parseFloat(parts[6].trim());
+  const wdl   = parseFloat(parts[11].trim());
 
   var x = 0;
   var sq = 0;
 
   const activeIndices = [];
 
-  if (target != 0 && target != 1 && target != 0.5) {
-    console.log('target format', line);
-    process.exit();
-  }
-
-  for (var j = 0; j < board.length; j++) {
-    var ch = board.charAt(j);
-    if (ch == '/')
-      continue;
-    var num = chNum[ch];
-    if (typeof (num) == 'undefined') {
-      if (chCol[ch] == WHITE)
-        x = 0 + chPce[ch] * 64 + sq;
-      else if (chCol[ch] == BLACK)
-        x = 384 + chPce[ch] * 64 + sq;
-      else
-        console.log('colour');
-      activeIndices.push(x);
-      sq++;
+  if (!skip(parts)) {
+    //{{{  decode board
+    
+    for (var j = 0; j < board.length; j++) {
+      var ch = board.charAt(j);
+      if (ch == '/')
+        continue;
+      var num = chNum[ch];
+      if (typeof (num) == 'undefined') {
+        if (chCol[ch] == WHITE)
+          x = 0 + chPce[ch] * 64 + sq;
+        else if (chCol[ch] == BLACK)
+          x = 384 + chPce[ch] * 64 + sq;
+        else
+          console.log('colour');
+        activeIndices.push(x);
+        sq++;
+      }
+      else {
+        sq += num;
+      }
     }
-    else {
-      sq += num;
-    }
+    
+    //}}}
   }
 
-  if (activeIndices.length > 32 || activeIndices.length < 2) {
-    console.log('activeIndices', activeIndices.length, activeIndices.toString());
-    process.exit();
-  }
+  let target = lerp(eval,wdl,interp);
 
-  return { activeIndices, target: [target] };
+  return {activeIndices, target: [target]};
+}
+
+//}}}
+//{{{  skip
+
+function skip (parts) {
+
+  const noisy = parts[8].trim();
+  if (noisy == 'n')
+    return true;
+
+  const inCh  = parts[9].trim();
+  if (inCh == 'c')
+    return true;
+
+  const gvCh  = parts[10].trim();
+  if (gvCh == 'g')
+    return true;
+
+  return false;
 }
 
 //}}}
 //{{{  calculateDatasetLoss
 
 async function calculateDatasetLoss(filename, params) {
+
   const fileStream = fs.createReadStream(filename);
   const rl = readline.createInterface({
     input: fileStream,
@@ -395,16 +416,63 @@ async function calculateDatasetLoss(filename, params) {
 
   for await (const line of rl) {
     const {activeIndices, target} = decodeLine(line);
-    const forward = forwardPropagation([activeIndices], params);
-    const loss = Math.pow(forward.A2[0] - target[0], 2);
-    totalLoss += loss;
-    count++;
-    if ((count % 100000) == 0)
-      process.stdout.write(count + '\r');
+    if (activeIndices.length) {
+      //{{{  use this position
+      
+      const forward = forwardPropagation([activeIndices], params);
+      
+      const loss = Math.pow(forward.A2[0] - target[0], 2);
+      
+      totalLoss += loss;
+      
+      count++;
+      
+      if ((count % 100000) == 0)
+        process.stdout.write(count + '\r');
+      
+      //}}}
+    }
   }
+
+  numBatches = count / batchSize | 0;
 
   rl.close();
   return totalLoss / count;
+}
+
+//}}}
+//{{{  calculateNumBatches
+
+async function calculateNumBatches(filename) {
+
+  const fileStream = fs.createReadStream(filename);
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+
+  let count = 0;
+
+  for await (const line of rl) {
+
+    const parts = line.split(' ');
+
+    if (parts.length != 12) {
+      console.log('line format', line, parts.length);
+      process.exit();
+    }
+
+    if (!skip(parts)) {
+
+      count++;
+
+      if ((count % 1000000) == 0)
+        process.stdout.write(count + '\r');
+    }
+  }
+
+  rl.close();
+  return count / batchSize | 0;
 }
 
 //}}}
@@ -415,7 +483,10 @@ async function train(filename) {
   let params = initializeParameters();
   let datasetLoss = 0;
 
+  numBatches = await calculateNumBatches(filename);
   saveModel(0, params, 0);
+
+  console.log('hidden',hiddenSize,'acti',activationName(acti),'stretch',K,'batchsize',batchSize,'lr',learningRate,'interp',interp,'num batches',numBatches);
 
   let t = 0;
 
@@ -433,33 +504,38 @@ async function train(filename) {
 
     for await (const line of rl) {
       const {activeIndices, target} = decodeLine(line);
-
-      batchActiveIndices.push(activeIndices);
-      batchTargets.push(target[0]);
-
-      if (batchActiveIndices.length === batchSize) {
-        t++;
-        const forward = forwardPropagation(batchActiveIndices, params);
-        const grads = backwardPropagation(batchActiveIndices, batchTargets, params, forward);
-        params = updateParameters(params, grads, t);
-
-        const batchLoss = forward.A2.reduce((sum, pred, i) =>
-          sum + Math.pow(pred - batchTargets[i], 2), 0) / batchSize;
-        totalLoss += batchLoss;
-        batchCount++;
-
-        batchActiveIndices = [];
-        batchTargets = [];
-
-        if (batchCount % 100 === 0) {
-          process.stdout.write(`Epoch ${epoch + 1}, Batch ${batchCount}, Average Loss: ${totalLoss / batchCount}\r`);
+      if (activeIndices.length) {
+        //{{{  use this position
+        
+        batchActiveIndices.push(activeIndices);
+        batchTargets.push(target[0]);
+        
+        if (batchActiveIndices.length === batchSize) {
+          t++;
+          const forward = forwardPropagation(batchActiveIndices, params);
+          const grads = backwardPropagation(batchActiveIndices, batchTargets, params, forward);
+          params = updateParameters(params, grads, t);
+        
+          const batchLoss = forward.A2.reduce((sum, pred, i) =>
+            sum + Math.pow(pred - batchTargets[i], 2), 0) / batchSize;
+          totalLoss += batchLoss;
+          batchCount++;
+        
+          batchActiveIndices = [];
+          batchTargets = [];
+        
+          if (batchCount % reportRate === 0) {
+            process.stdout.write(`Epoch ${epoch + 1}, Batch ${batchCount}/${numBatches}, Mean Batch Loss: ${totalLoss / batchCount}\r`);
+          }
         }
+        
+        //}}}
       }
     }
 
-    console.log(`Epoch ${epoch + 1} completed. Average Batch Loss: ${totalLoss / batchCount}`);
+    console.log(`Epoch ${epoch + 1} completed. Mean Batch Loss: ${totalLoss / batchCount}`);
 
-    if ((epoch + 1) % 10 === 0) {
+    if ((epoch + 1) % lossRate === 0) {
       let marker = '';
       datasetLoss = await calculateDatasetLoss(filename, params);
       if (datasetLoss < minLoss) {
@@ -467,10 +543,6 @@ async function train(filename) {
         marker = '***';
       }
       console.log(`Dataset Loss after ${epoch + 1} epochs: ${datasetLoss} ${marker}`);
-      const wCache = weightsFile;
-      weightsFile = 'data/e' + (epoch+1) + '.js';
-      saveModel(datasetLoss, params, epoch + 1);
-      weightsFile = wCache;
     }
 
     saveModel(datasetLoss, params, epoch + 1);
@@ -482,8 +554,6 @@ async function train(filename) {
 }
 
 //}}}
-
-console.log('hidden',hiddenSize,'crelu',useCReLU,'stretch',K);
 
 train(dataFile).then(params => {
     console.log('Training completed.');
