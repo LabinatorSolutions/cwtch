@@ -7,7 +7,7 @@ Internal data generation and DIY Javascript trainer.
 Currently +45 over Lozza with this net:-
 
 ```
-datagen softnodes 6000 hardnodes 12000 random 10ply first 16ply
+datagen soft-nodes 6000 hard-nodes 12000 random-moves 10ply first-used 16ply
 hidden-size 75                                                                                                                                     
 learning-rate 0.001                                                                                                                                
 batch-size 500                                                                                                                                     
