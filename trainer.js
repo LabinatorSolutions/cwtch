@@ -20,10 +20,10 @@ const K            = 100;
 const acti         = 1;    // relu - see activations fold
 const interp       = 0.5;
 
+const dataFiles = ['data/data1.shuf','data/data2.shuf'];
 const reportRate = 50; // mean batch loss freq during epoch
 const lossRate = 10;   // dataset loss freq
 const epochs = 10000;
-const dataFile = 'data/data.shuf';
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
 const outputSize = 1;
@@ -36,9 +36,48 @@ const l2RegFactor = 0.001;
 const useAdamW = false;
 const weightDecay = 0.01;
 
+//{{{  line constants
+//
+// 0                         1    2      3  4    5   6     7    8     9       10          11
+// 8/8/8/8/6p1/5nk1/p7/3RrK2 w    -      -  3    169 -1124 d1e1 n     c       -           0.0
+// board                     turn rights ep game ply score move noisy incheck  givescheck wdl
+//
+
+const PART_BOARD      = 0;
+const PART_TURN       = 1;
+const PART_RIGHTS     = 2;
+const PART_EP         = 3;
+const PART_GAME       = 4;
+const PART_PLY        = 5;
+const PART_SCORE      = 6;
+const PART_MOVE       = 7;
+const PART_NOISY      = 8;
+const PART_INCHECK    = 9;
+const PART_GIVESCHECK = 10;
+const PART_WDL        = 11;
+
+//}}}
+
 let minLoss = 9999;
 let numBatches = 0;
 
+//{{{  createLineStream
+
+async function* createLineStream(filenames) {
+  for (const filename of filenames) {
+    const fileStream = fs.createReadStream(filename);
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
+    for await (const line of rl) {
+      yield line;
+    }
+    rl.close();
+  }
+}
+
+//}}}
 //{{{  lerp
 
 function lerp(eval, wdl, t) {
@@ -158,6 +197,10 @@ function saveModel(loss, params, epochs) {
 
   const actiName = activationName(acti);
 
+  let opt = 'Adam';
+  if (useAdamW)
+    opt = 'AdamW';
+
   var o = '//{{{  weights\r\n';
 
   o += 'const net_h1_size     = '  + hiddenSize   + ';\r\n';
@@ -167,6 +210,8 @@ function saveModel(loss, params, epochs) {
   o += 'const net_stretch     = '  + K            + ';\r\n';
   o += 'const net_interp      = '  + interp       + ';\r\n';
   o += 'const net_num_batches = '  + numBatches   + ';\r\n';
+  o += 'const net_opt         = "' + opt          + '";\r\n';
+  o += 'const net_l2_reg      = '  + useL2Reg     + ';\r\n';
   o += 'const net_epochs      = '  + epochs       + ';\r\n';
   o += 'const net_loss        = '  + loss         + ';\r\n';
 
@@ -301,7 +346,7 @@ function updateParameters(params, grads, t) {
     const sCorrected = s[i] / (1 - Math.pow(beta2, t));
     let update = learningRate * vCorrected / (Math.sqrt(sCorrected) + epsilon);
     if (useL2Reg) {
-      update += l2RegFactor * param[i]; // Apply L2 regularization
+      update -= l2RegFactor * param[i]; // Apply L2 regularization
     }
     if (useAdamW) {
       param[i] -= learningRate * weightDecay * param[i]; // ADAMW weight decay
@@ -356,16 +401,19 @@ function decodeLine(line) {
 
   const parts = line.split(' ');
 
-  const board = parts[0].trim();
-  const eval  = parseFloat(parts[6].trim());
-  const wdl   = parseFloat(parts[11].trim());
+  const board = parts[PART_BOARD].trim();
+  const eval  = parseFloat(parts[PART_SCORE].trim());
+  const wdl   = parseFloat(parts[PART_WDL].trim());
 
   var x = 0;
   var sq = 0;
 
   const activeIndices = [];
 
-  if (!skip(parts)) {
+  let target = 0.0;
+
+  if (!skipP(parts,eval,wdl)) {
+
     //{{{  decode board
     
     for (var j = 0; j < board.length; j++) {
@@ -389,138 +437,65 @@ function decodeLine(line) {
     }
     
     //}}}
-  }
 
-  let target = lerp(eval,wdl,interp);
+    target = lerp(eval,wdl,interp);
+  }
 
   return {activeIndices, target: [target]};
 }
 
 //}}}
-//{{{  skip
+//{{{  skipP
 
-function skip (parts) {
+function skipP (parts,eval,wdl) {
 
-  const noisy = parts[8].trim();
+  const noisy = parts[PART_NOISY].trim();
   if (noisy == 'n')
     return true;
 
-  const inCh  = parts[9].trim();
+  const inCh  = parts[PART_INCHECK].trim();
   if (inCh == 'c')
     return true;
 
-  const gvCh  = parts[10].trim();
+  const gvCh  = parts[PART_GIVESCHECK].trim();
   if (gvCh == 'g')
+    return true;
+
+  if (parts[PART_MOVE].trim().length == 5)  // promotion
+    return true;
+
+  if (wdl == 0.5 && Math.abs(eval) > 300)
     return true;
 
   return false;
 }
 
 //}}}
-//{{{  calculateDatasetLoss
-
-async function calculateDatasetLoss(filename, params) {
-
-  const fileStream = fs.createReadStream(filename);
-  const rl = readline.createInterface({
-    input: fileStream,
-    crlfDelay: Infinity
-  });
-
-  let totalLoss = 0;
-  let count = 0;
-
-  for await (const line of rl) {
-    const {activeIndices, target} = decodeLine(line);
-    if (activeIndices.length) {
-      //{{{  use this position
-      
-      const forward = forwardPropagation([activeIndices], params);
-      
-      const loss = Math.pow(forward.A2[0] - target[0], 2);
-      
-      totalLoss += loss;
-      
-      count++;
-      
-      if ((count % 100000) == 0)
-        process.stdout.write(count + '\r');
-      
-      //}}}
-    }
-  }
-
-  numBatches = count / batchSize | 0;
-
-  rl.close();
-  return totalLoss / count;
-}
-
-//}}}
-//{{{  calculateNumBatches
-
-async function calculateNumBatches(filename) {
-
-  const fileStream = fs.createReadStream(filename);
-  const rl = readline.createInterface({
-    input: fileStream,
-    crlfDelay: Infinity
-  });
-
-  let count = 0;
-
-  for await (const line of rl) {
-
-    const parts = line.split(' ');
-
-    if (parts.length != 12) {
-      console.log('line format', line, parts.length);
-      process.exit();
-    }
-
-    if (!skip(parts)) {
-
-      count++;
-
-      if ((count % 1000000) == 0)
-        process.stdout.write(count + '\r');
-    }
-  }
-
-  rl.close();
-  return count / batchSize | 0;
-}
-
-//}}}
 //{{{  train
 
-async function train(filename) {
+async function train(filenames) {
 
   let params = initializeParameters();
   let datasetLoss = 0;
 
-  numBatches = await calculateNumBatches(filename);
+  numBatches = await calculateNumBatches(filenames);
   saveModel(0, params, 0);
 
-  console.log('hidden',hiddenSize,'acti',activationName(acti),'stretch',K,'batchsize',batchSize,'lr',learningRate,'interp',interp,'num batches',numBatches);
+  console.log('hidden',hiddenSize,'acti',activationName(acti),'stretch',K,'batchsize',batchSize,'lr',learningRate,'interp',interp,'num batches',numBatches,'filtered positions',numBatches*batchSize);
 
   let t = 0;
 
   for (let epoch = 0; epoch < epochs; epoch++) {
     //{{{  train epoch
     
-    const fileStream = fs.createReadStream(filename);
-    const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity
-    });
+    const lineStream = createLineStream(filenames);
     
     let batchActiveIndices = [];
     let batchTargets = [];
     let batchCount = 0;
     let totalLoss = 0;
     
-    for await (const line of rl) {
+    for await (const line of lineStream) {
       const {activeIndices, target} = decodeLine(line);
       if (activeIndices.length) {
         //{{{  use this position
@@ -562,7 +537,7 @@ async function train(filename) {
     if ((epoch + 1) % lossRate === 0) {
     
       let marker = '';
-      datasetLoss = await calculateDatasetLoss(filename, params);
+      datasetLoss = await calculateDatasetLoss(filenames, params);
     
       if (datasetLoss < minLoss) {
         minLoss = datasetLoss;
@@ -576,8 +551,6 @@ async function train(filename) {
     
     saveModel(datasetLoss, params, epoch + 1);
     
-    rl.close();
-    
     //}}}
   }
 
@@ -585,8 +558,76 @@ async function train(filename) {
 }
 
 //}}}
+//{{{  calculateNumBatches
 
-train(dataFile).then(params => {
+async function calculateNumBatches(filenames) {
+
+  const lineStream = createLineStream(filenames);
+
+  let count = 0;
+
+  for await (const line of lineStream) {
+
+    const parts = line.split(' ');
+
+    if (parts.length != 12) {
+      console.log('line format', line, parts.length);
+      process.exit();
+    }
+
+    const eval = parseFloat(parts[PART_SCORE].trim());
+    const wdl  = parseFloat(parts[PART_WDL].trim());
+
+    if (!skipP(parts,eval,wdl)) {
+
+      count++;
+
+      if ((count % 1000000) == 0)
+        process.stdout.write(count + '\r');
+    }
+  }
+
+  return count / batchSize | 0;
+}
+
+//}}}
+//{{{  calculateDatasetLoss
+
+async function calculateDatasetLoss(filenames, params) {
+
+  const lineStream = createLineStream(filenames);
+
+  let totalLoss = 0;
+  let count = 0;
+
+  for await (const line of lineStream) {
+    const {activeIndices, target} = decodeLine(line);
+    if (activeIndices.length) {
+      //{{{  use this position
+      
+      const forward = forwardPropagation([activeIndices], params);
+      
+      const loss = Math.pow(forward.A2[0] - target[0], 2);
+      
+      totalLoss += loss;
+      
+      count++;
+      
+      if ((count % 100000) == 0)
+        process.stdout.write(count + '\r');
+      
+      //}}}
+    }
+  }
+
+  numBatches = count / batchSize | 0;
+
+  return totalLoss / count;
+}
+
+//}}}
+
+train(dataFiles).then(params => {
     console.log('Training completed.');
 }).catch(error => {
     console.error('Error during training:', error);
