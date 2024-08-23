@@ -4,7 +4,7 @@ An experimental Javascript UCI chess engine with NNUE evaluation.
 
 Internal data generation and DIY Javascript trainer.
 
-Currently +45 over Lozza with this internal net:-
+Currently +45 over Lozza with this net:-
 
 ```
 datagen softnodes 6000 hardnodes 12000 random 10ply first 16ply
