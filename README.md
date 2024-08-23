@@ -20,7 +20,7 @@ epochs 157
 loss 0.023536278157536648
 ```
 
-If you want to try cwtch, it can be fired in Node.js like Lozza. For details see the readme in the Lozza 2.5 release.
+If you want to try cwtch, it can be fired up in Node.js like Lozza. For details see the readme in the Lozza 2.5 release.
 
 https://github.com/op12no2/lozza/releases/tag/2.5
 
