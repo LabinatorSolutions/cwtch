@@ -26,7 +26,7 @@ min o weight 0.8036063313484192
 max o weight 328.6114196777344
 ```
 
-Data format:-
+Training data format created with ```datagen``` command:-
 
 ```
 //
@@ -36,7 +36,8 @@ Data format:-
 //
 ```
 
-See the ```skipP``` function in ```trainer.js``` for how the data is filtered during training:-
+See the ```skipP``` function in ```trainer.js``` for how the training data is filtered during training:-
+
 
 https://github.com/op12no2/cwtch/blob/main/trainer.js#L450
 
