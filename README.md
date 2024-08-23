@@ -44,3 +44,13 @@ https://github.com/op12no2/cwtch/blob/main/trainer.js#L450
 If you want to try cwtch, it can be fired up in Node.js like Lozza. For details see the readme in the Lozza 2.5 release.
 
 https://github.com/op12no2/lozza/releases/tag/2.5
+
+Or from the command line:-
+
+```
+node cwtch
+node cwtch u n "position startpos" b "go depth 10" bench q
+node cwtch et pt q  //eval and perft tests
+node cwtch "datagen file data/d1.fen games 10 soft-nodes 6000 hard-nodes 12000 random-ply 10 first-ply 16" q
+```
+
