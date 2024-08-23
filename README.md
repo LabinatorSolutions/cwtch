@@ -26,6 +26,16 @@ min o weight 0.8036063313484192
 max o weight 328.6114196777344
 ```
 
+Data format:-
+
+```
+//
+// 0                         1    2      3  4    5   6     7    8     9       10          11
+// 8/8/8/8/6p1/5nk1/p7/3RrK2 w    -      -  3    169 -1124 d1e1 n     c       -           0.0
+// board                     turn rights ep game ply score move noisy incheck givescheck  wdl
+//
+```
+
 See the ```skipP``` function in ```trainer.js``` for how the data is filtered during training:-
 
 https://github.com/op12no2/cwtch/blob/main/trainer.js#L450
