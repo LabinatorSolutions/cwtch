@@ -8,15 +8,15 @@ Currently +45 over Lozza with this net:-
 
 ```
 datagen softnodes 6000 hardnodes 12000 random 10ply first 16ply
-h1 size 75                                                                                                                                         
-lr 0.001                                                                                                                                           
-batch size 500                                                                                                                                     
+hidden-size 75                                                                                                                                     
+learning-rate 0.001                                                                                                                                
+batch-size 500                                                                                                                                     
 activation relu                                                                                                                                    
-stretch 100                                                                                                                                        
-interp 0.5                                                                                                                                         
-num_batches 227547                                                                                                                                 
-opt Adam                                                                                                                                           
-l2reg false                                                                                                                                        
+sigmoid-stretch 100                                                                                                                                
+score-wdl-lambda 0.5                                                                                                                               
+num-batches 227547                                                                                                                                 
+optimiser Adam                                                                                                                                     
+l2-reg false                                                                                                                                       
 epochs 157                                                                                                                                         
 loss 0.023536278157536648
 ```
