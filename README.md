@@ -7,7 +7,8 @@ Internal data generation and DIY Javascript trainer.
 Currently +45 over Lozza with this net:-
 
 ```
-datagen soft-nodes 6000 hard-nodes 12000 random-moves 10ply first-used 16ply
+[C:\projects\cwtch]node cwtch n q
+datagen soft-nodes 6000 hard-nodes 12000 random-ply 10 first-ply 16                                                                                
 hidden-size 75                                                                                                                                     
 learning-rate 0.001                                                                                                                                
 batch-size 500                                                                                                                                     
@@ -18,7 +19,11 @@ num-batches 227547
 optimiser Adam                                                                                                                                     
 l2-reg false                                                                                                                                       
 epochs 157                                                                                                                                         
-loss 0.023536278157536648
+loss 0.023536278157536648                                                                                                                          
+min h weight 0.000005815227268612944                                                                                                               
+max h weight 98.90455627441406                                                                                                                     
+min o weight 0.8036063313484192                                                                                                                    
+max o weight 328.6114196777344
 ```
 
 See the ```skipP``` function in ```trainer.js``` for how the data is filtered during training:-
