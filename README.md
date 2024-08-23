@@ -54,3 +54,7 @@ node cwtch et pt q  //eval and perft tests
 node cwtch "datagen file data/d1.fen games 10 soft-nodes 6000 hard-nodes 12000 random-ply 10 first-ply 16" q
 ```
 
+See ```uciExec``` function for all commands.
+
+https://github.com/op12no2/cwtch/blob/main/cwtch.js#L1624
+
