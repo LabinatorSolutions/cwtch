@@ -13,17 +13,17 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const hiddenSize   = 75;
+const hiddenSize   = 64;
 const batchSize    = 500;
 const learningRate = 0.001;
 const K            = 100;
 const acti         = 1;    // relu - see activations fold
 const interp       = 0.5;
 
-const dataFiles = ['data/data1.shuf','data/data2.shuf'];
+const dataFiles = [];
 const reportRate = 50; // mean batch loss freq during epoch
 const lossRate = 10;   // dataset loss freq
-const epochs = 10000;
+const epochs = 0;
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
 const outputSize = 1;
@@ -38,9 +38,9 @@ const weightDecay = 0.01;
 
 //{{{  line constants
 //
-// 0                         1    2      3  4    5   6     7    8     9       10          11
-// 8/8/8/8/6p1/5nk1/p7/3RrK2 w    -      -  3    169 -1124 d1e1 n     c       -           0.0
-// board                     turn rights ep game ply score move noisy incheck  givescheck wdl
+// 0                         1    2      3  4    5   6     7    8         9           10             11
+// 8/8/8/8/6p1/5nk1/p7/3RrK2 w    -      -  3    169 -1124 d1e1 n         c           -              0.0
+// board                     turn rights ep game ply score move noisy n|- incheck c|- givescheck g|- wdl 0.0|0.5|1.0
 //
 
 const PART_BOARD      = 0;
@@ -115,15 +115,16 @@ function srelu(x) {
 }
 
 function dsrelu(x) {
-  return x > 0 ? 2 : 0;
+  return x > 0 ? 2*x : 0;
 }
 
 function screlu(x) {
-  return Math.min(Math.max(x, 0), 1) * Math.min(Math.max(x, 0), 1);
+  const y = Math.min(Math.max(x, 0), 1);
+  return y * y;
 }
 
 function dscrelu(x) {
-  return (x > 0 && x < 1) ? 2 : 0;
+  return (x > 0 && x < 1) ? 2*x : 0;
 }
 
 function activationFunction(x) {
