@@ -760,7 +760,8 @@
         if (this.flags & NOISY_MOVES_ONLY)
           return 0;
   
-        this.genCastlingMoves();
+        if (!this.inCheck)
+          this.genCastlingMoves();
   
         this.stage++;
   
@@ -2519,6 +2520,7 @@
     //}}}
   
     let e = 0;
+  
     if (ttIndex)
       e = this.ttEval[ttIndex];
     else
@@ -2541,6 +2543,7 @@
     let played = 0;
   
     node.cacheSave();
+  
     node.initMoveGen(NOISY_MOVES_ONLY, inCheck);
   
     while (move = node.getNextMove()) {
@@ -2548,7 +2551,7 @@
       if (moveIsQuiet(move))
         console.log('quiet q move', formatMove(move)); //hack
   
-      if (this.quickSee(move) < 0)
+      if (!inCheck && this.quickSee(move) < 0)
         continue;
   
       //{{{  make move
