@@ -272,6 +272,7 @@
   const MOVE_NOISY_MASK    = MOVE_TOOBJ_MASK | MOVE_EPTAKE_MASK;
   const MOVE_IKKY_MASK     = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK;
   const MOVE_REPRESET_MASK = MOVE_TOOBJ_MASK | MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK;
+  const MOVE_KEEPER_MASK   = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK;
   
   const MOVE_E1G1 = MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | G1;
   const MOVE_E1C1 = MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | C1;
@@ -2332,23 +2333,25 @@
   
     while (move = node.getNextMove()) {
   
-      //{{{  late move pruning
-      
       if (node.stage == 5)
         quiets++;
+  
+      const keeper = move & MOVE_KEEPER_MASK;
+  
+      //{{{  late move pruning
       
       let cutoff = 4 + depth * depth;
       if (!improv)
         cutoff = cutoff / 2 | 0;
       
-      if (played && quiets > cutoff && !inCheck && !rootNode && !pvNode && depth <= 8) {
+      if (!keeper && played && quiets > cutoff && !inCheck && !rootNode && !pvNode && depth <= 8) {
         continue;
       }
       
       //}}}
       //{{{  futility pruning
       
-      if (played && node.stage == 5 && !inCheck && !rootNode && !pvNode && depth <= 2 && (ev + depth * depth * 100) < alpha) {
+      if (!keeper && played && quiets && !inCheck && !rootNode && !pvNode && depth <= 2 && (ev + depth * depth * 100) < alpha) {
         continue;
       }
       
