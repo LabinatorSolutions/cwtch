@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Check if the number of processes (n) is provided
+if [ -z "$1" ]; then
+    echo "Usage: ./datagen n"
+    exit 1
+fi
+
+# Loop from 1 to n
+for i in $(seq 1 $1); do
+    node cwtch "datagen f data/$RANDOM$RANDOM.fen" q &
+done
+
+# Optional: Wait for all background processes to finish before exiting the script
+# wait
