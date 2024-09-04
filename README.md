@@ -1,5 +1,7 @@
 # Cwtch
 
-An experimental Javascript UCI chess engine with NNUE evaluation.
+A Javascript UCI chess engine with NNUE evaluation.
 
 Internal data generation and DIY Javascript trainer.
+
+Boot network was a random init.
