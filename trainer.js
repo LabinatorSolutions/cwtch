@@ -1,5 +1,5 @@
 //
-// simple 768 x N x 1 white-relative trainer.
+// simple 768 x N x 1 white-relative trainer for cwtch.
 //
 // use: node trainer
 //
@@ -13,6 +13,7 @@
 const fs = require('fs');
 const readline = require('readline');
 
+const dataFiles = [];
 const hiddenSize   = 64;
 const batchSize    = 500;
 const learningRate = 0.001;
@@ -20,7 +21,6 @@ const K            = 100;
 const acti         = 1;    // relu - see activations fold
 const interp       = 0.5;
 
-const dataFiles = [];
 const reportRate = 50; // mean batch loss freq during epoch
 const lossRate = 10;   // dataset loss freq
 const epochs = 0;
@@ -85,6 +85,17 @@ function lerp(eval, wdl, t) {
   let l = sg + (wdl - sg) * t;
   //console.log(eval,sg,wdl,l);
   return l;
+}
+
+//}}}
+//{{{  optiName
+
+function optiName() {
+  if (useAdamW)
+    return "AdamW";
+  else
+    return "Adam";
+  end
 }
 
 //}}}
@@ -197,24 +208,22 @@ function initializeParameters() {
 function saveModel(loss, params, epochs) {
 
   const actiName = activationName(acti);
-
-  let opt = 'Adam';
-  if (useAdamW)
-    opt = 'AdamW';
+  const opt      = optiName();
 
   var o = '//{{{  weights\r\n';
 
-  o += 'const net_h1_size     = '  + hiddenSize   + ';\r\n';
-  o += 'const net_lr          = '  + learningRate + ';\r\n';
-  o += 'const net_batch_size  = '  + batchSize    + ';\r\n';
-  o += 'const net_activation  = "' + actiName     + '";\r\n';
-  o += 'const net_stretch     = '  + K            + ';\r\n';
-  o += 'const net_interp      = '  + interp       + ';\r\n';
-  o += 'const net_num_batches = '  + numBatches   + ';\r\n';
-  o += 'const net_opt         = "' + opt          + '";\r\n';
-  o += 'const net_l2_reg      = '  + useL2Reg     + ';\r\n';
-  o += 'const net_epochs      = '  + epochs       + ';\r\n';
-  o += 'const net_loss        = '  + loss         + ';\r\n';
+  o += 'const net_h1_size     = '  + hiddenSize             + ';\r\n';
+  o += 'const net_lr          = '  + learningRate           + ';\r\n';
+  o += 'const net_activation  = "' + actiName               + '";\r\n';
+  o += 'const net_stretch     = '  + K                      + ';\r\n';
+  o += 'const net_interp      = '  + interp                 + ';\r\n';
+  o += 'const net_batch_size  = '  + batchSize              + ';\r\n';
+  o += 'const net_num_batches = '  + numBatches             + ';\r\n';
+  o += 'const net_positions   = '  + numBatches * batchSize + ';\r\n';
+  o += 'const net_opt         = "' + opt                    + '";\r\n';
+  o += 'const net_l2_reg      = '  + useL2Reg               + ';\r\n';
+  o += 'const net_epochs      = '  + epochs                 + ';\r\n';
+  o += 'const net_loss        = '  + loss                   + ';\r\n';
 
   o += '//{{{  weights\r\n';
 
