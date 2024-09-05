@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Check if at least one host is provided
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 host1 [host2 ... hostN]"
+    exit 1
+fi
+
+# Loop through all provided hosts
+for host in "$@"
+do
+    # Retrieve the IP address corresponding to the current host from /etc/hosts
+    ip=$(grep -w "$host" /etc/hosts | awk '{print $1}')
+    
+    # Check if the IP was found
+    if [ -z "$ip" ]; then
+        echo "Error: Could not find IP for host '$host' in /etc/hosts"
+        continue
+    fi
+
+    # Perform file copying from the remote host
+    echo "Copying files from $host ($ip)..."
+    scp xyzzy@$ip:/home/xyzzy/cwtch/data/*.fen data/
+done
+
+wc -l data/*.fen
