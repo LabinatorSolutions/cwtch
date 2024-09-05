@@ -13,17 +13,17 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const dataFiles = [];
+const dataFiles    = ['data/data1.shuf'];
 const hiddenSize   = 64;
 const batchSize    = 500;
 const learningRate = 0.001;
 const K            = 100;
 const acti         = 1;    // relu - see activations fold
-const interp       = 0.5;
+const interp       = 0.9;
 
 const reportRate = 50; // mean batch loss freq during epoch
 const lossRate = 10;   // dataset loss freq
-const epochs = 0;
+const epochs = 10000;
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
 const outputSize = 1;
@@ -83,7 +83,6 @@ async function* createLineStream(filenames) {
 function lerp(eval, wdl, t) {
   let sg = sigmoid(eval);
   let l = sg + (wdl - sg) * t;
-  //console.log(eval,sg,wdl,l);
   return l;
 }
 
@@ -92,9 +91,9 @@ function lerp(eval, wdl, t) {
 
 function optiName() {
   if (useAdamW)
-    return "AdamW";
+    return "adamw";
   else
-    return "Adam";
+    return "adam";
   end
 }
 
@@ -484,6 +483,17 @@ function skipP (parts,eval,wdl) {
 //{{{  train
 
 async function train(filenames) {
+
+  //{{{  randomise
+  
+  let now = new Date();
+  let midnight = new Date(now);
+  midnight.setHours(0, 0, 0, 0);
+  let n = Math.floor((now - midnight) / 1000);
+  for (let i=0; i < n; i++)
+    Math.random();
+  
+  //}}}
 
   let params = initializeParameters();
   let datasetLoss = 0;
