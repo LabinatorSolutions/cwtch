@@ -19,10 +19,10 @@ const batchSize    = 500;
 const learningRate = 0.001;
 const K            = 100;
 const acti         = 1;    // relu - see activations fold
-const interp       = 0.9;
+const interp       = 0.7;
 
 const reportRate = 50; // mean batch loss freq during epoch
-const lossRate = 10;   // dataset loss freq
+const lossRate = 50;   // dataset loss freq
 const epochs = 10000;
 const weightsFile = 'data/weights.js';
 const inputSize = 768;
@@ -512,8 +512,8 @@ async function train(filenames) {
     
     let batchActiveIndices = [];
     let batchTargets = [];
-    let batchCount = 0;
     let totalLoss = 0;
+    let batchCount = 0;
     
     for await (const line of lineStream) {
       const {activeIndices, target} = decodeLine(line);
@@ -565,6 +565,10 @@ async function train(filenames) {
       }
     
       console.log(`Dataset Loss after ${epoch + 1} epochs: ${datasetLoss} ${marker}`);
+    }
+    
+    else {
+      datasetLoss = totalLoss / batchCount;
     }
     
     //}}}
