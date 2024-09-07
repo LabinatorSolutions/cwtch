@@ -10,7 +10,7 @@ fi
 for host in "$@"
 do
     # Retrieve the IP address corresponding to the current host from /etc/hosts
-    ip=$(grep -w "$host" /etc/hosts | awk '{print $1}')
+    ip=$(grep -w "$host" ./hosts | awk '{print $1}')
     
     # Check if the IP was found
     if [ -z "$ip" ]; then

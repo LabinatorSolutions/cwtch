@@ -1,11 +1,11 @@
 #!/bin/bash
 
-tc="tc=0/30+0.3"
+tc="tc=0/60+0.6"
 
 e1="-engine conf=coal $tc"
-e2="-engine conf=lozza $tc"
+e2="-engine conf=cand $tc"
 
-threads=6
+threads=4
 
 m="-recover -concurrency $threads"
 
