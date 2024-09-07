@@ -4,7 +4,7 @@ An experimental Javascript chess engine with a very simple (768 x 64)x1 x 1 NNUE
 
 Internal data generation, random init boot network, DIY Javascript trainer.
 
-The goal of the project is to determine if Cwtch can equal Lozza.
+The goal of the project is to determine if Cwtch can equal my HCE engine [Lozza](https://github.com/op12no2/lozza).
 
 WIP
 
