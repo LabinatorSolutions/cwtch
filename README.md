@@ -11,7 +11,7 @@ datagen: softnodes 6000 hardnodes 120000 randomply 10 firstply 16
 ```
 cwtch> node cwtch n q
 build 1
-origin quiet-labeled.epd && lichess-big3-resolved wdl boot and 2 rounds of RL.                                                                        
+origin quiet-labeled.epd && lichess-big3-resolved.epd wdl boot and 2 rounds of RL.                                                                     
 h1 size 75                                                                                                                                            
 lr 0.001                                                                                                                                              
 activation relu                                                                                                                                       
