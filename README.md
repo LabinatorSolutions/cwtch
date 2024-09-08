@@ -1,7 +1,7 @@
 # Cwtch
 An experimental Javascript chess engine with a simple NNUE eval. Internal data generation and DIY Javascript trainer.
 ## Goal
-Determine if Javascript NNUE is viable by testing against my HCE engine [Lozza](https://github.com/op12no2/lozza).
+Determine if a (hand-coded) Javascript NNUE is viable by testing against my HCE engine [Lozza](https://github.com/op12no2/lozza).
 ## Progress
 ```
 build=1, tc=60+1
