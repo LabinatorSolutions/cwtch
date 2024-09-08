@@ -1,8 +1,4 @@
-//
-// simple 768 x N x 1 white-relative trainer for cwtch.
-//
-// use: node trainer
-//
+
 //{{{  lang fold
 /*
 
@@ -14,12 +10,12 @@ const fs = require('fs');
 const readline = require('readline');
 
 const dataFiles    = ['data/data1.shuf'];
-const hiddenSize   = 64;
+const hiddenSize   = 128;
 const batchSize    = 500;
 const learningRate = 0.001;
 const K            = 100;
 const acti         = 1;    // relu - see activations fold
-const interp       = 0.7;
+const interp       = 0.5;
 
 const reportRate = 50; // mean batch loss freq during epoch
 const lossRate = 50;   // dataset loss freq
