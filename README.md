@@ -1,4 +1,4 @@
-# Cwtch
+# cwtch
 An experimental Javascript chess engine with a simple NNUE eval. Internal data generation and DIY Javascript trainer.
 ## Goal
 Determine if a (hand-coded) Javascript NNUE eval is viable by testing against my HCE engine [Lozza](https://github.com/op12no2/lozza).
@@ -36,7 +36,7 @@ Elo difference: 63.3 +/- 20.1, LOS: 100.0 %, DrawRatio: 24.9 %
 SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 ## Plan
-Engine: Use bitboards, add SEE, more search heuristics, better move ordering and selection.
+Engine: External nets (currently inlined), use bitboards, add SEE, more search heuristics, better move ordering and selection.
 Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> data gen), buckets etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
