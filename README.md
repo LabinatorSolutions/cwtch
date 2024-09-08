@@ -6,12 +6,10 @@ Feel free to test Cwtch but beware it's early days and there may be gremlins. Pl
 Determine if a (hand-coded) Javascript NNUE eval is viable by testing against my HCE engine [Lozza](https://github.com/op12no2/lozza).
 ## Progress
 ```
-datagen: softnodes 6000 hardnodes 120000 randomply 10 firstply 16
-```
-```
 cwtch> node cwtch n q
 build 1
 origin quiet-labeled.epd && lichess-big3-resolved.epd wdl boot and 2 rounds of RL.                                                                     
+datagen softnodes 6000 hardnodes 120000 randomply 10 firstply 16
 h1 size 75                                                                                                                                            
 lr 0.001                                                                                                                                              
 activation relu                                                                                                                                       
