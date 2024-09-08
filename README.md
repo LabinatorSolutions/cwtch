@@ -37,6 +37,6 @@ SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 ## Plan
 Engine: Use bitboards, add SEE, more search heuristics, better move ordering and selection.
-Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> self gen data), buckets etc. At some point reboot from a random init or Lozza HCE. 
+Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> data gen), buckets etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
