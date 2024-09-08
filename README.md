@@ -15,4 +15,4 @@ SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ## Plan
 Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> self gen data), buckets, etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
-The Engine Programming discord server for answering my newbie questions.
+The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
