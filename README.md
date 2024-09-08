@@ -1,7 +1,7 @@
 # Cwtch
 An experimental UCI Javascript chess engine with a simple NNUE eval. Internal data generation and DIY Javascript trainer.
 ## To Testers
-Feel free to test Cwtch but beware it's early days and there may be gremlins. Please download the latest release rather then use the repo version, which is knobbled a bit for development ease. 
+Feel free to test Cwtch but beware it's early days and there may be gremlins. Please download the latest release rather than use the repo version, which is knobbled a bit for development ease. 
 ## Goal
 Determine if a (hand-coded) Javascript NNUE eval is viable by testing against my HCE engine [Lozza](https://github.com/op12no2/lozza).
 ## Progress
