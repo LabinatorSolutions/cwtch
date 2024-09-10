@@ -45,6 +45,9 @@ SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 Killers need aligning with colour - either use 2 per node indexed by colourIndex() or a different root node for black.
 ## Plan
 Engine: Proper PV, external nets (currently inlined), use bitboards, add SEE, more search heuristics, better move ordering and selection.
+
 Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> data gen), phase buckets etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
+
+I used [Ethereal](https://github.com/AndyGrant/Ethereal) to shape Cwtch's search and stole some of the constants, which will presumably need to be tweaked because of Cwtch's slower speed and different eval.
