@@ -50,4 +50,4 @@ Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> da
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
 
-I used [Ethereal](https://github.com/AndyGrant/Ethereal) to shape Cwtch's search and stole some of the constants, which will presumably need to be tweaked because of Cwtch's slower speed and different eval.
+I used [Ethereal](https://github.com/AndyGrant/Ethereal) to shape Cwtch's search and stole some of the constants, which I'm gradually changing to suit Cwtch's slower speed and different eval.
