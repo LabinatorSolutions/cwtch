@@ -39,8 +39,6 @@ Score of cwtch vs lozza: 411 - 252 - 220  [0.590] 883
 Elo difference: 63.3 +/- 20.1, LOS: 100.0 %, DrawRatio: 24.9 %
 SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
-#### Known bugs
-Killers need aligning with colour - either use 2 per node indexed by colourIndex() or a different root node for black.
 ## Plan
 Engine: Proper PV, external nets (currently inlined), use bitboards, add SEE, more search heuristics, better move ordering and selection.
 
