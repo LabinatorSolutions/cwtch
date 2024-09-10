@@ -46,7 +46,7 @@ Killers need aligning with colour - either use 2 per node indexed by colourIndex
 ## Plan
 Engine: Proper PV, external nets (currently inlined), use bitboards, add SEE, more search heuristics, better move ordering and selection.
 
-Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> data gen), phase buckets etc. At some point reboot from a random init or Lozza HCE. 
+Network: Try perspective, quantisation, adam2, srelu, screlu, etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
 I used [Ethereal](https://github.com/AndyGrant/Ethereal) to shape Cwtch's search and stole some of the pruning constants, which I'm gradually changing to suit Cwtch's slower speed and different eval.
 
