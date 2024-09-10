@@ -48,7 +48,7 @@ Engine: Proper PV, external nets (currently inlined), use bitboards, add SEE, mo
 
 Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> data gen), phase buckets etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
-I used [Ethereal](https://github.com/AndyGrant/Ethereal) to shape Cwtch's search and stole some of the constants, which I'm gradually changing to suit Cwtch's slower speed and different eval.
+I used [Ethereal](https://github.com/AndyGrant/Ethereal) to shape Cwtch's search and stole some of the pruning constants, which I'm gradually changing to suit Cwtch's slower speed and different eval.
 
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
 
