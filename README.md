@@ -13,8 +13,6 @@ datagen softnodes 6000 hardnodes 120000 randomply 10 firstply 16
 origin quiet-labeled.epd && lichess-big3-resolved.epd wdl boot and 2 rounds of RL                                                                     
 i size 768                                                                                                                                            
 h1 size 75                                                                                                                                            
-h1 accumulators 1                                                                                                                                     
-o phase buckets 0                                                                                                                                     
 lr 0.001                                                                                                                                              
 activation relu                                                                                                                                       
 stretch 100                                                                                                                                           
