@@ -7,11 +7,14 @@ Determine if a (hand-coded) Javascript NNUE eval is viable by testing against my
 ## Progress
 #### Latest net
 ```
-cwtch> node cwtch n q
-build 1
-origin quiet-labeled.epd && lichess-big3-resolved.epd wdl boot and 2 rounds of RL.                                                                     
-datagen softnodes 6000 hardnodes 120000 randomply 10 firstply 16
+[c:\projects\cwtch]node cwtch n q
+build 1                                                                                                                                               
+datagen softnodes 6000 hardnodes 120000 randomply 10 firstply 16                                                                                      
+origin quiet-labeled.epd && lichess-big3-resolved.epd wdl boot and 2 rounds of RL                                                                     
+i size 768                                                                                                                                            
 h1 size 75                                                                                                                                            
+h1 accumulators 1                                                                                                                                     
+o phase buckets 0                                                                                                                                     
 lr 0.001                                                                                                                                              
 activation relu                                                                                                                                       
 stretch 100                                                                                                                                           
@@ -26,7 +29,7 @@ loss 0.023536278157536648
 min h1 weight 0.000005815227268612944                                                                                                                 
 max h1 weight 98.90455627441406                                                                                                                       
 min o weight 0.8036063313484192                                                                                                                       
-max o weight 328.6114196777344   
+max o weight 328.6114196777344 
 ```
 #### Latest result
 ```
@@ -40,6 +43,6 @@ SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 ## Plan
 Engine: Proper PV, external nets (currently inlined), use bitboards, add SEE, more search heuristics, better move ordering and selection.
-Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> data gen), buckets etc. At some point reboot from a random init or Lozza HCE. 
+Network: Try perspective, quantisation, adam2, srelu, screlu, halfk* (with >> data gen), phase buckets etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
