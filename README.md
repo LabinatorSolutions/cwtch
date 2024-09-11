@@ -8,7 +8,8 @@ Determine if a (hand-coded) Javascript NNUE eval is viable by testing against my
 #### Latest net
 ```
 [c:\projects\cwtch]node cwtch n q
-build 1                                                                                                                                               
+build 1
+bench 3206228                                                                                                                                         
 datagen softnodes 6000 hardnodes 120000 randomply 10 firstply 16                                                                                      
 origin quiet-labeled.epd && lichess-big3-resolved.epd wdl boot and 2 rounds of RL                                                                     
 i size 768                                                                                                                                            
