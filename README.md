@@ -50,3 +50,5 @@ The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server f
 The [Chess Programming Wiki](https://www.chessprogramming.org).
 
 Stockfish's [NNUE](https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md) Overview.
+
+Logo copyright [raygirl](https://www.deviantart.com/raygirl)
