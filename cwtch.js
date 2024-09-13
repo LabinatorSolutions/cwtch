@@ -1,7 +1,7 @@
 
 (function() {
 
-  const BUILD = "1";
+  const BUILD = "2";
 
   //{{{  constants
   
@@ -503,6 +503,13 @@
   
   function myround(x) {
     return Math.sign(x) * Math.round(Math.abs(x));
+  }
+  
+  //}}}
+  //{{{  clamp
+  
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
   }
   
   //}}}
@@ -1469,8 +1476,8 @@
     //{{{  history
     
     for (let i=0; i < 6; i++) {
-      this.wHistory[i] = new Uint32Array(144);
-      this.bHistory[i] = new Uint32Array(144);
+      this.wHistory[i] = new Int16Array(144);
+      this.bHistory[i] = new Int16Array(144);
     }
     
     this.objHistory[W_PAWN]   = this.wHistory[W_PAWN-1];
@@ -2713,11 +2720,6 @@
     
     //}}}
   
-    if (Math.random() >= 0.5) {
-      random -= 1;
-      first -= 1;
-    }
-  
     this.quiet = 1;
   
     fs.writeFileSync(file,'');
@@ -2726,17 +2728,28 @@
     let score = 0;
     let move = 0;
   
+    let stats = {};
+    stats.w = 0;
+    stats.d = 0;
+    stats.l = 0;
+  
     for (let g=0; g < games; g++) {
   
       //{{{  init new game
       
-      const percent = g/games * 100 | 0;
+      const gg       = g + 1;
+      const percent  = gg/games * 100 | 0;
+      const statsStr = ((stats.w/gg*100)|0) + '%|' + ((stats.d/gg*100)|0) + '%|' + ((stats.l/gg*100)|0) + '%';
       
-      process.stdout.write(g + '/' + games + ' ' + percent + '%\r');
+      if ((gg % 100) == 0)
+        console.log('wdl',statsStr,gg,'of',games,'games',percent+'%');
       
       this.newGame();
       
       this.uciExec('position startpos');
+      
+      if (Math.random() >= 0.5)
+        this.turn = colourToggle(this.turn);  // let black move first 50% of the time
       
       let ply  = 0;
       let fens = [];
@@ -2795,6 +2808,15 @@
         if (wdl.length) {
         
           //{{{  update fens and buffer
+          
+          if (wdl == '1.0')
+            stats.w++;
+          else if (wdl == '0.5')
+            stats.d++;
+          else if (wdl == '0.0')
+            stats.l++;
+          else
+            console.log('xxxxxxxxxxx');
           
           for (var i=0; i < fens.length; i++)
             fens[i] = fens[i] + wdl;
@@ -3808,16 +3830,20 @@
   //}}}
   //{{{  historyAdd
   
+  const MAX_HISTORY = 32000;
+  
   cwtchStruct.prototype.historyAdd = function (move, v) {
   
     if (moveIsNoisy(move))
       return;
   
+    //v = clamp(v,-MAX_HISTORY,MAX_HISTORY);
+  
     const frObj = moveFromObj(move);
     const to    = moveToSq(move);
     const h     = this.objHistory[frObj];
   
-    h[to] = h[to] + v;
+    h[to] += v - h[to] * (Math.abs(v) / MAX_HISTORY)|0;
   
   }
   
