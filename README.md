@@ -43,7 +43,7 @@ SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ## Plan
 Engine: Proper PV, external nets (currently inlined), use bitboards, add SEE, more search heuristics, better move ordering and selection.
 
-Network: Try perspective, quantisation, adam2, srelu, screlu, etc. At some point reboot from a random init or Lozza HCE. 
+Network: Try perspective, quantisation, adam2, srelu, screlu, etc. At some point reboot the net from a random init or Lozza HCE. 
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie NNUE and data gen. questions.
 
