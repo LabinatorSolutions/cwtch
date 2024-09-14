@@ -45,7 +45,7 @@ Engine: Proper PV, external nets (currently inlined), use bitboards, add SEE, mo
 
 Network: Try perspective, quantisation, adam2, srelu, screlu, etc. At some point reboot from a random init or Lozza HCE. 
 ## Acknowledgements
-The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
+The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie NNUE and data gen. questions.
 
 The [Chess Programming Wiki](https://www.chessprogramming.org). Most of Cwtch's algorithms come from here.
 
