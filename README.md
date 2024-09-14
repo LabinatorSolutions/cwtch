@@ -47,8 +47,10 @@ Network: Try perspective, quantisation, adam2, srelu, screlu, etc. At some point
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie questions.
 
-The [Chess Programming Wiki](https://www.chessprogramming.org).
+The [Chess Programming Wiki](https://www.chessprogramming.org). Most of Cwtch's algorithms come from here.
 
 Stockfish's [NNUE](https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md) Overview.
+
+I initially used some of the search magic numbers from [Ethereal] but I'm gradually tuning them to values that suit Cwtch. I also used Ethereal's aspiration window algorithm but again it's gradually morphing to suit Cwtch. 
 
 Logo [raygirl](https://www.deviantart.com/raygirl)
