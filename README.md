@@ -12,7 +12,7 @@ SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ## Acknowledgements
 The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie NNUE and data generation questions.
 
-The [Chess Programming Wiki](https://www.chessprogramming.org). Most of Cwtch's algorithms come from here.
+Most of Cwtch's algorithms come from the [Chess Programming Wiki](https://www.chessprogramming.org). 
 
 Stockfish's [NNUE](https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md) Overview.
 
