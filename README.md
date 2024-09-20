@@ -1,5 +1,5 @@
 # Cwtch
-An experimental UCI Javascript chess engine with a simple NNUE eval, internal data generation and DIY Javascript trainer.
+An experimental UCI Javascript chess engine with a simple NNUE evaluation, internal data generation and DIY Javascript trainer.
 ```
 tc=60+1
 Score of cwtch1 vs lozza2.5: 411 - 252 - 220  [0.590] 883
@@ -10,7 +10,7 @@ Elo difference: 63.3 +/- 20.1, LOS: 100.0 %, DrawRatio: 24.9 %
 SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 ## Acknowledgements
-The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie NNUE and data gen. questions.
+The [Engine Programming](https://discord.com/invite/F6W6mMsTGN) discord server for answering my newbie NNUE and data generation questions.
 
 The [Chess Programming Wiki](https://www.chessprogramming.org). Most of Cwtch's algorithms come from here.
 
