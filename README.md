@@ -11,4 +11,4 @@ SPRT: llr 2.96 (100.6%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 The network is very simple: 768 -> 75 (relu) -> 1. It was booted using WDL from quiet_labeled.epd and lichess-big3-resolved.epd (8M positions), but (inspired by the Stormphrax author) I spent some time experimenting with booting from a random init and that seems to work well too; I just didn't have the patience to go through with the necessary iterations. The boot net was then improved with two rounds of datagen/training using a lerp of 0.5 and around 114M positions. As some have pointed out 75 is a pretty weird layer size, but it seemed to be the best tradeoff between strength and speed for my implementation.
 
-I don't have the patience, but I think Javascript is probably fast enough for somebody to develop a NNUE hand coded engine with a CCRL ELO over 3000. 
+I don't have the patience, but I think Javascript is probably fast enough for somebody to develop a NNUE hand coded engine with a CCRL Elo over 3000. 
