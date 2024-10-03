@@ -1,16 +1,14 @@
 
 // messy/hakky code
 
-const id = 'srelu5';
-
-console.log(id);
-
 //{{{  lang fold
 /*
 
 */
 
 //}}}
+
+const id_suffix = '';
 
 const ACTI_RELU   = 1;
 const ACTI_CRELU  = 2;
@@ -24,23 +22,21 @@ const path = require('path');
 //const fs = require('fs').promises;
 
 const dataFiles       = ['data/data1.shuf','data/data2.shuf'];
+
+const acti            = ACTI_RELU;
 const hiddenSize      = 75;
-const acti            = ACTI_SRELU;
 const interp          = 0.5;
 
 const shuffle         = true;
-const quant           = 100;
 const batchSize       = 500;
 const learningRate    = 0.001;
 const K               = 100;
 const useL2Reg        = false;
 const useAdamW        = false;
 
-const reportRate      = 50; // mean batch loss freq during epoch
+const reportRate      = 50;   // mean batch loss freq during epoch
 const lossRate        = 50;   // dataset loss freq
 const epochs          = 10000;
-const weightsFile     = 'data/weights_' + id + '.js';
-const weightsFileQ    = 'data/weights_' + id + '_q.js';
 const inputSize       = 768;
 const outputSize      = 1;
 const maxActiveInputs = 32;
@@ -49,6 +45,9 @@ const beta2           = 0.999;
 const epsilon         = 1e-7;
 const l2RegFactor     = 0.001;
 const weightDecay     = 0.01;
+
+const id = activationName() + '_' + hiddenSize + '_' + Math.trunc(interp * 10) + id_suffix;
+console.log(id);
 
 //{{{  line constants
 //
@@ -112,7 +111,7 @@ async function shuffleAllFiles(files) {
   try {
     const shufflePromises = files.map(file => shuffleFile(file));
     const results = await Promise.all(shufflePromises);
-    results.forEach(result => console.log(result));
+    //results.forEach(result => console.log(result));
   } catch (error) {
     console.error(error);
   }
@@ -262,7 +261,7 @@ function initializeParameters() {
 //}}}
 //{{{  saveModel
 
-function saveModel(loss, params, epochs, q) {
+function saveModel(loss, params, epochs) {
 
   const actiName = activationName(acti);
   const opt      = optiName();
@@ -270,10 +269,6 @@ function saveModel(loss, params, epochs, q) {
   var o = '//{{{  weights\r\n';
 
   o += 'const net_h1_size     = '  + hiddenSize             + ';\r\n';
-  if (q)
-    o += 'const net_quant       = '  + quant                  + ';\r\n';
-  else
-    o += 'const net_quant       = '  + 1                    + ';\r\n';
   o += 'const net_lr          = '  + learningRate           + ';\r\n';
   o += 'const net_activation  = '  + actiName               + ';\r\n';
   o += 'const net_stretch     = '  + K                      + ';\r\n';
@@ -291,26 +286,18 @@ function saveModel(loss, params, epochs, q) {
 
   //{{{  write h1 weights
   
-  if (!q)
-    o += 'const net_h1_w = Array(768);\r\n';
-  else
-    o += 'const net_h1_w = Array(768);\r\n';
+  o += 'const net_h1_w = Array(768);\r\n';
   
   var a = params.W1;
   var a2 = [];
   
   for (var i=0; i < 768; i++) {
     a2 = [];
-    a3 = [];
     const j = i * hiddenSize;
     for (var k=0; k < hiddenSize; k++) {
       a2.push(a[j+k]);
-      a3.push(myround(a[j+k] * quant));
     }
-    if (!q)
-      o += 'net_h1_w[' + i + ']  = new Float32Array([' + a2.toString() + ']);\r\n';
-    else
-      o += 'net_h1_w[' + i + '] = new Int16Array([' + a3.toString() + ']);\r\n';
+    o += 'net_h1_w[' + i + ']  = new Float32Array([' + a2.toString() + ']);\r\n';
   }
   
   //}}}
@@ -318,49 +305,30 @@ function saveModel(loss, params, epochs, q) {
   
   var a = params.b1;
   
-  if (!q)
-    o += 'const net_h1_b = new Float32Array([' + a.toString() + ']);\r\n';
-  
-  a = params.b1.map(x => myround(x * quant));
-  
-  if (q)
-    o += 'const net_h1_b = new Int16Array([' + a.toString() + ']);\r\n';
+  o += 'const net_h1_b = new Float32Array([' + a.toString() + ']);\r\n';
   
   //}}}
   //{{{  write o weights
   
   var a = params.W2;
   
-  if (!q)
-    o += 'const net_o_w = new Float32Array([' + a.toString() + ']);\r\n';
-  
-  a = params.W2.map(x => myround(x * quant));
-  
-  if (q)
-    o += 'const net_o_w = new Int16Array([' + a.toString() + ']);\r\n';
+  o += 'const net_o_w = new Float32Array([' + a.toString() + ']);\r\n';
   
   //}}}
   //{{{  write o bias
   
   var a = params.b2;
   
-  if (!q)
-    o += 'const net_o_b = ' + a.toString() + ';\r\n';
-  
-  a = myround(a * quant);
-  
-  if (q)
-    o += 'const net_o_b = ' + a.toString() + ';\r\n';
+  o += 'const net_o_b = ' + a.toString() + ';\r\n';
   
   //}}}
 
   o += '\r\n//}}}\r\n';
   o += '\r\n//}}}\r\n\r\n';
 
-  if (q)
-    fs.writeFileSync(weightsFileQ, o);
-  else
-    fs.writeFileSync(weightsFile, o);
+  const weightsFile= 'data/weights_' + id + '_' + epochs + '.js';
+
+  fs.writeFileSync(weightsFile, o);
 }
 
 //}}}
@@ -595,10 +563,9 @@ async function train(filenames) {
   let datasetLoss = 0;
 
   numBatches = await calculateNumBatches(filenames);
-  saveModel(0, params, 0, '');
-  saveModel(0, params, 0, 'q');
+  saveModel(0, params, 0);
 
-  console.log(id, 'hidden',hiddenSize,'acti',activationName(acti),'stretch',K,'shuffle',shuffle,'quant',quant,'batchsize',batchSize,'lr',learningRate,'interp',interp,'num batches',numBatches,'filtered positions',numBatches*batchSize);
+  console.log(id, 'hidden',hiddenSize,'acti',activationName(acti),'stretch',K,'shuffle',shuffle,'batchsize',batchSize,'lr',learningRate,'interp',interp,'num batches',numBatches,'filtered positions',numBatches*batchSize);
 
   let t = 0;
 
@@ -670,8 +637,7 @@ async function train(filenames) {
     
     //}}}
     
-    saveModel(datasetLoss, params, epoch + 1, '');
-    saveModel(datasetLoss, params, epoch + 1, 'q');
+    saveModel(datasetLoss, params, epoch + 1);
     
     if (shuffle)
       await shuffleAllFiles(dataFiles);
