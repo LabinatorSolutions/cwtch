@@ -1,0 +1,5 @@
+cp /mnt/c/projects/cwtch/*.js .
+dos2unix *.js
+
+
+

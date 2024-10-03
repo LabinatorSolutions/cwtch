@@ -1,0 +1,2 @@
+unix2dos data/*.js  
+cp data/*.js /mnt/c/projects/cwtch/data
