@@ -1,5 +1,5 @@
 # Cwtch
-An experimental UCI Javascript chess engine with NNUE evaluation, internal data generation and DIY Javascript trainer. No further work is planned. I just wanted to see if a (hand coded) Javascript NNUE could beat my traditional evaluation in Lozza.
+An experimental UCI Javascript chess engine using a small NNUE. Internal data generation and DIY Javascript trainer. No further work is planned. I just wanted to see if a (hand coded) Javascript NNUE could beat my traditional evaluation in Lozza.
 ```
 tc=60+1
 Score of cwtch vs lozza2.5: 411 - 252 - 220  [0.590] 883
